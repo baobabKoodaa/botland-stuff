@@ -1,5 +1,5 @@
-
 init = function() {
+    commonInitProcedures();
 
     FORWARD_MINE_ATTACKS = 0;
 
@@ -12,18 +12,22 @@ init = function() {
     countForwardMineAttacks = 0;
     countBackwardMineAttacks = 0;
     forwardMinesState = 0;
-    currLife = 2000;
-    turn = 0;
     lastEvadeTurn = -1000;
     lastMineLayTurn = -1000;
 
 }
 
+update = function () {
+    commonStateUpdates()
+    updateHeatmap()
+    specialActions()
+    normalActions()
+
+};
+
 reflectAllowed = function() {
     return (turn >= REFLECT_ALLOWED_FROM_TURN);
 }
-
-/******************************************************************** Special actions ********************************************************************/
 
 specialActions = function() {
     d = distToClosestEnemyBot(x, y)
@@ -70,8 +74,6 @@ specialActions = function() {
 
 
 
-/******************************************************************** Normal actions ********************************************************************/
-
 normalActions = function() {
     // If we don't see anything, then move towards the CPU
     closestEnemy = findEntity(ENEMY, ANYTHING, SORT_BY_DISTANCE, SORT_ASCENDING);
@@ -96,7 +98,7 @@ normalActions = function() {
             }
 
         }
-        // Maybe lure enemy into mine that we are standing on //TODO break cardinality here?
+        // Maybe lure enemy into mine that we are standing on //TODO break cardinality here or not?
         if (distanceTo(closestBot) <= 1 && !canLayMine()) {
             if (x == xe+1) {
                 tryMoveTo(x+1, y)
@@ -166,15 +168,3 @@ normalActions = function() {
     }
     pursue(closestEnemy); // chip of cpu
 }
-
-update = function () {
-
-    // Update state
-    turn += 1;
-    prevLife = currLife;
-    currLife = life;
-
-    specialActions();
-    normalActions();
-
-};

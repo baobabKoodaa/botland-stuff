@@ -1,39 +1,56 @@
-
-
-/******************************************************************** Initialization ********************************************************************/
-
 init = function() {
-    initializeSharedVariables();
-    assignId();
+    commonInitProcedures()
 
     HEAT_LONGEVITY = 4;
     HEAT_SIT = 30;
     DMG_RESPONSE_THRESHOLD = 61;
     HOTNESS_THRESHOLD = 90;
 
-    turn = 0;
-    currLife = 2000;
-    currDistToClosestBot = 999;
-
     LASER_RANGE = 4;
     REFLECT_ALLOWED_FROM_TURN = 1;
     DESTROY_CHIPS_AT_START = true;
-};
+}
 
-initializeSharedVariables = function() {
-    if (!exists(sharedA)) sharedA = 0; // Next free id
-    if (!exists(sharedB)) {
-        // Heatmap
-        array2 = [];
-        array2[0] = 1; // Next free index in heatmap.
-        sharedB = array2;
+update = function() {
+    commonStateUpdates()
+    updateHeatmap()
+
+    //debugLog('turn', turn, 'x', x, 'y', y, 'life', life, 'heat', getLocationHeat(x, y));
+
+    specialActions()
+    act()
+
+}
+
+specialActions = function() {
+    if (life < 2000 || currDistToClosestBot <= 5) DESTROY_CHIPS_AT_START = false
+    if (DESTROY_CHIPS_AT_START) {
+        chip = findEntity(ENEMY, CHIP, SORT_BY_DISTANCE, SORT_ASCENDING)
+        if (exists(chip) && willArtilleryHit(chip)) fireArtillery(chip)
+        else DESTROY_CHIPS_AT_START = false
     }
 }
 
-assignId = function() {
-    id = sharedA;
-    sharedA += 1;
-};
+act = function() {
+    if (currDistToClosestBot >= 2) {
+        if (isLocationHot(x, y)) {
+            probablyDodge()
+        } else if (currDistToClosestBot <= 4 && !willMissilesHit(findClosestEnemyBot())) {
+            probablyDodge()
+        }
+    }
+    if (reflectAllowed() && canReflect() && currDistToClosestBot <= 5) {
+        reflect()
+    }
+    if (canActivateSensors() && currDistToClosestBot > 5 && prevDistToClosestBot <= 5) {
+        activateSensors()
+    }
+
+    maybeFire()
+    reactToEnclosingEnemies()
+    maybeMoveTowardsCPU()
+    //TODO fallback?
+}
 
 reflectAllowed = function() {
     return (turn >= REFLECT_ALLOWED_FROM_TURN);
@@ -174,58 +191,7 @@ maybeMoveTowardsCPU = function() {
     moveIfSafe(x+1, y);
 }
 
-startSpecials = function() {
-    if (life < 2000 || currDistToClosestBot <= 5) DESTROY_CHIPS_AT_START = false;
-    if (DESTROY_CHIPS_AT_START) {
-        chip = findEntity(ENEMY, CHIP, SORT_BY_DISTANCE, SORT_ASCENDING);
-        if (exists(chip) && willArtilleryHit(chip)) fireArtillery(chip);
-        else DESTROY_CHIPS_AT_START = false;
-    }
-}
 
-act = function() {
-    if (currDistToClosestBot >= 2) {
-        if (isLocationHot(x, y)) {
-            probablyDodge();
-        } else if (currDistToClosestBot <= 4 && !willMissilesHit(findClosestEnemyBot())) {
-            probablyDodge();
-        }
-    }
-    if (reflectAllowed() && canReflect() && currDistToClosestBot <= 5) {
-        reflect();
-    }
-    if (canActivateSensors() && currDistToClosestBot > 5 && prevDistToClosestBot <= 5) {
-        activateSensors();
-    }
-
-    maybeFire();
-    reactToEnclosingEnemies();
-    maybeMoveTowardsCPU();
-    //TODO fallback?
-}
-
-update = function() {
-
-
-    // Maintain state
-    turn += 1;
-    prevLife = currLife;
-    currLife = life;
-    prevDistToClosestBot = currDistToClosestBot;
-    currDistToClosestBot = distToClosestEnemyBot(x, y);
-    updateHeatmap();
-
-
-
-    //debugLog('turn', turn, 'x', x, 'y', y, 'life', life, 'heat', getLocationHeat(x, y));
-
-    // Start specials
-    startSpecials();
-
-    // Actions
-    act();
-
-};
 
 
 

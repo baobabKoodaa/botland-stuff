@@ -12,7 +12,6 @@ function minify(jsFileContent) {
         line = line.trim();
         // Remove semicolons
         if (line.slice(-1) == ';') line = line.substring(0, line.length-1)
-        if (line.length == 0) continue
         out.push(line)
     }
     return out
