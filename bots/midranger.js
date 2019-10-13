@@ -6,9 +6,12 @@ init = function() {
     SS_BACKWARD_MINES = 0;
     SS_BACKWARD_LEFT = 1;
 
-    EVADE_COOLDOWN = 3;
+    SS_REFLECT_TURN = 0;
+
+
     REFLECT_ALLOWED_FROM_TURN = 4;
 
+    DODGE_COOLDOWN = 2;
     DODGE_PENALTY_DIST_7 = 3
     DODGE_PENALTY_DIST_6 = 3
     DODGE_PENALTY_DIST_5 = 3
@@ -16,19 +19,16 @@ init = function() {
     DODGE_PENALTY_DIST_3 = 1
     DODGE_PENALTY_DIST_2 = 4
     DODGE_PENALTY_DIST_1 = 10
-
     DODGE_PENALTY_DIST_5_CARDINALITY_EXTRA = 1 // lvl3 lasers are not that common + we have high penalty for 5+ dist anyway
     DODGE_PENALTY_DIST_4_CARDINALITY_EXTRA = 2 // no difference between 4 and 3 dist cardinality; same threat to us in both
     DODGE_PENALTY_DIST_3_CARDINALITY_EXTRA = 2
     DODGE_PENALTY_DIST_2_CARDINALITY_EXTRA = 4 // melee charge cardinality in addition to laser!
-
     DODGE_PENALTY_EDGE_OF_MAP = 1
 
 
     countForwardMineAttacks = 0;
     countBackwardMineAttacks = 0;
     forwardMinesState = 0;
-    lastEvadeTurn = -1000;
     lastMineLayTurn = -1000;
 
     commonInitProcedures();
@@ -47,10 +47,12 @@ reflectAllowed = function() {
 }
 
 specialActions = function() {
+    if (turn == SS_REFLECT_TURN && canReflect()) reflect()
+
     d = distToClosestEnemyBot(x, y)
     if (FORWARD_MINE_ATTACKS) {
-        // Start/continue laying forward mines if we are near left side without seeing enemies
-        if (x <= 5 && d > 5 && forwardMinesState == 0 && countForwardMineAttacks < FORWARD_MINE_ATTACKS) {
+        // Start/continue laying forward mines if we don't see enemies
+        if (d > 5 && forwardMinesState == 0 && countForwardMineAttacks < FORWARD_MINE_ATTACKS) {
             forwardMinesState = 1;
             countForwardMineAttacks += 1;
         }
@@ -69,8 +71,8 @@ specialActions = function() {
             }
         }
         if (forwardMinesState == 2) {
-            if (!canLayMine() && canMove('left')) move('left');
-            else forwardMinesState = 0;
+            if (canLayMine()) forwardMinesState = 0;
+            if (canMove('left')) move('left');
         }
     }
 
@@ -106,7 +108,7 @@ normalActions = function() {
         ye = getY(closestBot)
 
         // Maybe zap
-        if (canZap() && inMeleeOrEnemyEnclosing() && currLife > 1000 && getLife(closestBot) > 750) {
+        if (canZap() && currDistToClosestBot == 1 && currLife > 1000 && getLife(closestBot) > 750) {
             zap()
         }
 
@@ -144,8 +146,8 @@ normalActions = function() {
         if (isLocationHot(x, y)) {
             // Cooldown for evade so we dont waste all our turns evading. This is more crucial to midranger compared to outranger,
             // because midranger will end up in missile vs missile/laser fights, whereas outranger can actually outrange opponents.
-            if (turn > lastEvadeTurn+EVADE_COOLDOWN) {
-                lastEvadeTurn = turn
+            if (turn >= lastDodgeTurn+DODGE_COOLDOWN) {
+                lastDodgeTurn = turn
                 probablyDodge()
             }
         }

@@ -1,26 +1,33 @@
 init = function() {
-    initializeSharedVariables();
-    assignId();
-
-    turn = 0;
-    prevLife = 2000;
-
-    xCPU = arenaWidth-2;
-    yCPU = (arenaHeight-1)/2
 
     SENSORS_ALLOWED_FROM_TURN = 1;
     TELEPORT_ALLOWED_FROM_TURN = 2;
     REFLECT_ALLOWED_FROM_TURN = 1;
     ZAP_ALLOWED_FROM_TURN = 1;
+
+    commonInitProcedures();
 };
 
-initializeSharedVariables = function() {
-    if (!exists(sharedA)) sharedA = 0; // Next free id
-}
+update = function() {
 
-assignId = function() {
-    id = sharedA;
-    sharedA += 1;
+    commonStateUpdates()
+
+    target = chooseTarget();
+    if (!exists(target)) {
+        maybeSensors();
+        maybeRetreatForCooldowns();
+        moveTo(xCPU, yCPU);
+    }
+    maybeFinishOff(target);
+    maybeReflect();
+    maybeZap(target);
+    maybeTeleportIntoEnemies(target);
+
+    if (willMeleeHit(target)) {
+        melee(target); // TODO what if we can charge at a different enemy than target.
+    }
+    moveTo(target); // TODO try to gain cardinality to charge?
+
 };
 
 zapAllowed = function() {
@@ -28,47 +35,46 @@ zapAllowed = function() {
 }
 
 reflectAllowed = function() {
-    return (turn >= REFLECT_ALLOWED_FROM_TURN);
+    return (turn >= REFLECT_ALLOWED_FROM_TURN)
 }
 
 teleportAllowed = function() {
-    return (turn >= TELEPORT_ALLOWED_FROM_TURN);
+    return (turn >= TELEPORT_ALLOWED_FROM_TURN)
 }
 
 sensorsAllowed = function() {
-    return (turn >= SENSORS_ALLOWED_FROM_TURN);
+    return (turn >= SENSORS_ALLOWED_FROM_TURN)
 }
 
-// Returns number of enemy bots between minDist, maxDist (inclusive, both) (that we can sense).
-enemyBotsWithinDist = function(cx, cy, minDist, maxDist) {
-    c = 0;
-    array1 = findEntities(ENEMY, BOT, false);
-    for (i = 0; i < size(array1); i++) {
-        e = array1[i];
-        ex = getX(e);
-        ey = getY(e);
-        dx = abs(ex - cx);
-        dy = abs(ey - cy);
-        dist = dx + dy;
-        if (dist >= minDist && dist <= maxDist) c += 1;
-    }
-    return c;
-}
-
-outOfBounds = function(cx, cy) {
-    return (cx < 0 || cy < 0 || cx >= arenaWidth || cy >= arenaHeight);
-}
-
+// Choose target primarily based on who we can melee, secondarily by distance, third by life.
 chooseTarget = function() {
-    targets = findEntities(ENEMY, BOT, false);
-    target = filterEntities(targets, [SORT_BY_DISTANCE, SORT_BY_LIFE], [SORT_ASCENDING, SORT_ASCENDING]);
-    if (!exists(target)) {
+    bestScore = -9999999
+    bestEntity = null
+    array1 = findEntities(ENEMY, BOT, false)
+    for (i = 0; i < size(array1); i++) {
+        ex = getX(array1[i])
+        ey = getY(array1[i])
+        lifeE = getLife(array1[i])
+        canMeleeE = willMeleeHit(array1[i])
+        dx = abs(ex - cx)
+        dy = abs(ey - cy)
+        distE = dx+dy
+
+        scoreE = 10000*distE + lifeE
+        if (canMeleeE) scoreE += 100000
+        if (scoreE > bestScore) {
+            bestScore = scoreE
+            bestEntity = array1[i]
+        }
+    }
+    // TODO when choosing target for teleport make sure we choose a target where WE HAVE SPACE TO TELEPORT NEXT TO!!!
+    if (!exists(bestEntity)) {
         // TODO alarm target set by other units?
     }
-    if (!exists(target)) {
-        target = findEntity(ENEMY, CHIP | CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
+    if (!exists(bestEntity)) {
+        bestEntity = findEntity(ENEMY, CHIP | CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     }
-    return target;
+    return bestEntity;
 }
 
 inDanger = function() {
@@ -142,7 +148,7 @@ teleportToBestOffensiveTeleportLocation = function() {
             dx = abs(cx - x);
             dy = abs(cy - y);
             dist = dx + dy;
-            if (dist >= 3 && canTeleport(cx, cy)) {
+            if (canTeleport(cx, cy)) {
                 score = scoreOffensiveTeleportLocation(cx, cy);
                 if (score > bestScore) {
                     bestScore = score;
@@ -169,29 +175,3 @@ maybeTeleportIntoEnemies = function(target) {
     }
 }
 
-update = function() {
-
-    // state updates
-    turn += 1;
-    actualPrevLife = prevLife;
-    prevLife = life;
-
-    // act
-    target = chooseTarget();
-
-    if (!exists(target)) {
-        maybeSensors();
-        maybeRetreatForCooldowns();
-        moveTo(xCPU, yCPU);
-    }
-    maybeFinishOff(target);
-    maybeReflect();
-    maybeZap(target);
-    maybeTeleportIntoEnemies(target);
-    if (willMeleeHit(target)) {
-        melee(target); // TODO what if we can charge at a different enemy than target.
-    }
-    moveTo(target); // TODO try to gain cardinality to charge?
-
-
-};

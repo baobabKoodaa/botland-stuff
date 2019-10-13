@@ -8,19 +8,21 @@ scoreDodgeLocation = function(cx, cy) {
     if (dc >= 7) s-= DODGE_PENALTY_DIST_7
     if (dc == 6) s-= DODGE_PENALTY_DIST_6
     if (dc == 5) s-= DODGE_PENALTY_DIST_5
-    if (dc == 4) s-= DODGE_PENALTY_DIST_4
+    if (dc == 4) s-= DODGE_PENALTY_DIST_4 // TODO make outranger favor missile vs missile combat when its reflectors are on, but make sure we dont hurt midranger's behavior with that
     if (dc == 3) s-= DODGE_PENALTY_DIST_3
     if (dc == 2) s-= DODGE_PENALTY_DIST_2
     if (dc == 1) s-= DODGE_PENALTY_DIST_1
 
     // Cardinality: our dodging bots do not have strong laser/melee abilities,
-    // so we want to avoid cardinality and prefer diagonality.
+    // so we want to avoid cardinality and prefer diagonality - unless reflectors are on! In that case we want cardinality!
     if (cardinalToClosestEnemyBot(cx, cy)) {
-        debugLog("turn", turn, "x", cx, "y", cy, "CARDINAL")
-        if (dc == 5) s-= DODGE_PENALTY_DIST_5_CARDINALITY_EXTRA
-        if (dc == 4) s-= DODGE_PENALTY_DIST_4_CARDINALITY_EXTRA
-        if (dc == 3) s-= DODGE_PENALTY_DIST_3_CARDINALITY_EXTRA
-        if (dc == 2) s-= DODGE_PENALTY_DIST_2_CARDINALITY_EXTRA
+        cardinalityExtra = 0;
+        if (dc == 5) cardinalityExtra = DODGE_PENALTY_DIST_5_CARDINALITY_EXTRA
+        if (dc == 4) cardinalityExtra = DODGE_PENALTY_DIST_4_CARDINALITY_EXTRA
+        if (dc == 3) cardinalityExtra = DODGE_PENALTY_DIST_3_CARDINALITY_EXTRA
+        if (dc == 2) cardinalityExtra = DODGE_PENALTY_DIST_2_CARDINALITY_EXTRA // TODO deal with melee charge risk
+        if (isReflecting()) s += cardinalityExtra
+        else s -= cardinalityExtra
     }
 
     // Avoid edges of the map
@@ -28,12 +30,13 @@ scoreDodgeLocation = function(cx, cy) {
         s -= DODGE_PENALTY_EDGE_OF_MAP
     }
 
-
     // Avoid moving next to friendly bots
     s -= 1*friendlyBotsWithinDist(cx, cy);
 
-    // Use heatMap to score the potential of taking damage in location
-    s -= 0.05*getLocationHeat(cx, cy);
+    if (DODGE_ARTILLERY) {
+        // Use heatMap to score the potential of taking damage in location.
+        s -= 0.05*getLocationHeat(cx, cy);
+    }
 
     return s;
 }

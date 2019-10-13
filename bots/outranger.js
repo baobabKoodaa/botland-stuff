@@ -3,6 +3,8 @@ init = function() {
     REFLECT_ALLOWED_FROM_TURN = 1
     DESTROY_CHIPS_AT_START = 1
 
+
+    DODGE_COOLDOWN = 2;
     DODGE_PENALTY_DIST_7 = 0
     DODGE_PENALTY_DIST_6 = 0
     DODGE_PENALTY_DIST_5 = 0
@@ -10,12 +12,10 @@ init = function() {
     DODGE_PENALTY_DIST_3 = 3
     DODGE_PENALTY_DIST_2 = 4
     DODGE_PENALTY_DIST_1 = 10
-
     DODGE_PENALTY_DIST_5_CARDINALITY_EXTRA = 0
     DODGE_PENALTY_DIST_4_CARDINALITY_EXTRA = 2
     DODGE_PENALTY_DIST_3_CARDINALITY_EXTRA = 3
     DODGE_PENALTY_DIST_2_CARDINALITY_EXTRA = 4
-
     DODGE_PENALTY_EDGE_OF_MAP = 1
 
     commonInitProcedures()
@@ -42,10 +42,11 @@ specialActions = function() {
 }
 
 normalActions = function() {
-    if (isLocationHot(x, y)) {
-        probablyDodge()
-    } else if (currDistToClosestBot <= 4 && !willMissilesHit(findClosestEnemyBot())) {
-        probablyDodge()
+    if (isLocationHot(x, y) || (currDistToClosestBot <= 4 && !willMissilesHit(findClosestEnemyBot()))) {
+        if (turn >= lastDodgeTurn+DODGE_COOLDOWN) {
+            lastDodgeTurn = turn
+            probablyDodge()
+        }
     }
     if (reflectAllowed() && canReflect() && currDistToClosestBot <= 5) {
         reflect()
@@ -110,13 +111,12 @@ moveIfSafe = function(cx, cy) {
 }
 
 maybeMoveTowardsCPU = function() {
-    // Move vertically towards center before moving horizontally towards right.
+    moveIfSafe(x+1, y)
     if (y < (arenaHeight/2 - 4)) {
         moveIfSafe(x, y+1);
     } else if (y > (arenaHeight/2 + 3)) {
         moveIfSafe(x, y-1);
     }
-    moveIfSafe(x+1, y);
 }
 
 

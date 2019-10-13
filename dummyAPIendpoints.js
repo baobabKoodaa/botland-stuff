@@ -27,6 +27,7 @@ getDistanceTo = function() {}
 getLife = function() {}
 getX = function() {}
 getY = function() {}
+isReflecting = function() {}
 isZapping = function() {}
 layMine = function() {}
 max = function() {}

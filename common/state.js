@@ -4,14 +4,15 @@ commonInitProcedures = function() {
     turn = 0;
     currLife = 2000;
     currDistToClosestBot = 999
+    lastDodgeTurn = -1000;
 
     HEAT_LONGEVITY = 4
     HEAT_SIT = 30
-    if (!DODGE_ARTILLERY) {
-        HEAT_SIT = 0
-    }
     DMG_RESPONSE_THRESHOLD = 61
     HOTNESS_THRESHOLD = 90
+
+    xCPU = arenaWidth-2;
+    yCPU = (arenaHeight-1)/2
 }
 
 commonStateUpdates = function() {
