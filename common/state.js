@@ -3,7 +3,15 @@ commonInitProcedures = function() {
     assignId();
     turn = 0;
     currLife = 2000;
-    currDistToClosestBot = 999;
+    currDistToClosestBot = 999
+
+    HEAT_LONGEVITY = 4
+    HEAT_SIT = 30
+    if (!DODGE_ARTILLERY) {
+        HEAT_SIT = 0
+    }
+    DMG_RESPONSE_THRESHOLD = 61
+    HOTNESS_THRESHOLD = 90
 }
 
 commonStateUpdates = function() {

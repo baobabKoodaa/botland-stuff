@@ -101,7 +101,7 @@ maybeRetreatForCooldowns = function() {
 }
 
 maybeFinishOff = function(target) {
-    if (target.life <= 550 && willMeleeHit(target)) {
+    if (getLife(target) <= 550 && willMeleeHit(target)) {
         melee(target);
     }
 }

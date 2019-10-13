@@ -1,13 +1,29 @@
 init = function() {
-    commonInitProcedures();
+
+    DODGE_ARTILLERY = 1
 
     FORWARD_MINE_ATTACKS = 0;
-
     SS_BACKWARD_MINES = 0;
     SS_BACKWARD_LEFT = 1;
 
     EVADE_COOLDOWN = 3;
     REFLECT_ALLOWED_FROM_TURN = 4;
+
+    DODGE_PENALTY_DIST_7 = 3
+    DODGE_PENALTY_DIST_6 = 3
+    DODGE_PENALTY_DIST_5 = 3
+    DODGE_PENALTY_DIST_4 = 0
+    DODGE_PENALTY_DIST_3 = 1
+    DODGE_PENALTY_DIST_2 = 4
+    DODGE_PENALTY_DIST_1 = 10
+
+    DODGE_PENALTY_DIST_5_CARDINALITY_EXTRA = 1 // lvl3 lasers are not that common + we have high penalty for 5+ dist anyway
+    DODGE_PENALTY_DIST_4_CARDINALITY_EXTRA = 2 // no difference between 4 and 3 dist cardinality; same threat to us in both
+    DODGE_PENALTY_DIST_3_CARDINALITY_EXTRA = 2
+    DODGE_PENALTY_DIST_2_CARDINALITY_EXTRA = 4 // melee charge cardinality in addition to laser!
+
+    DODGE_PENALTY_EDGE_OF_MAP = 1
+
 
     countForwardMineAttacks = 0;
     countBackwardMineAttacks = 0;
@@ -15,6 +31,7 @@ init = function() {
     lastEvadeTurn = -1000;
     lastMineLayTurn = -1000;
 
+    commonInitProcedures();
 }
 
 update = function () {
@@ -88,8 +105,13 @@ normalActions = function() {
         xe = getX(closestBot)
         ye = getY(closestBot)
 
+        // Maybe zap
+        if (canZap() && inMeleeOrEnemyEnclosing() && currLife > 1000 && getLife(closestBot) > 750) {
+            zap()
+        }
+
         // Maybe lay mine
-        if (canLayMine() && currLife > 550 && distanceTo(closestBot) <= 2 && x != 0 && y != 0 && x != arenaWidth-1 && y != arenaHeight-1) {
+        if (canLayMine() && inMeleeOrEnemyEnclosing() && currLife > 550 && x != 0 && y != 0 && x != arenaWidth-1 && y != arenaHeight-1) {
             otherFriendlies = friendlyBotsWithinDist(xe, ye, 2, 2);
             if (otherFriendlies == 0) {
                 // Prevent case where 2 midrangers both lay mines and both escape from the same opponent, essentially wasting some actions.
@@ -99,7 +121,7 @@ normalActions = function() {
 
         }
         // Maybe lure enemy into mine that we are standing on //TODO break cardinality here or not?
-        if (distanceTo(closestBot) <= 1 && !canLayMine()) {
+        if (currDistToClosestBot <= 1 && !canLayMine()) {
             if (x == xe+1) {
                 tryMoveTo(x+1, y)
             }
@@ -115,32 +137,16 @@ normalActions = function() {
             // else desired direction is blocked
         }
         if (reflectAllowed() && canReflect()) {
-            reflect();
+            reflect()
         }
 
         // If we took damage last turn, try to evade somehow (-50 because splash damage is ok)
-        if (currLife < prevLife-50) {
-            // Cooldown for evade so we dont waste all our turns evading.
+        if (isLocationHot(x, y)) {
+            // Cooldown for evade so we dont waste all our turns evading. This is more crucial to midranger compared to outranger,
+            // because midranger will end up in missile vs missile/laser fights, whereas outranger can actually outrange opponents.
             if (turn > lastEvadeTurn+EVADE_COOLDOWN) {
-                lastEvadeTurn = turn;
-                debugLog("turn", turn, "evading");
-
-                // Try to break cardinality (to prevent lasers) (note that any move also somewhat protects from artillery)
-                if (xe == x) { // TODO make sure no other bot has cardinality to our move-to spot either!
-                    // Horizontal move might help break cardinality
-                    if (randInt(0, 2) == 0) tryMoveTo(x+1, y);
-                    tryMoveTo(x-1, y);
-                }
-                if (ye == y) {
-                    // Vertical move might help break cardinality
-                    if (randInt(0, 2) == 0) tryMoveTo(x, y+1);
-                    tryMoveTo(x, y-1);
-                }
-                // We do not have cardinality to closest bot. Let's move anyway to avoid artillery.
-                if (distanceTo(closestBot) <= 3) tryMoveTo(x-1, y);
-                if (randInt(0, 2) == 0) tryMoveTo(x, y+1);
-                tryMoveTo(x, y-1);
-                tryMoveTo(x+1, y);
+                lastEvadeTurn = turn
+                probablyDodge()
             }
         }
 
@@ -150,11 +156,11 @@ normalActions = function() {
             enemies = findEntitiesInRange(ENEMY, BOT, false, 4);
             lowestHealthEnemy = filterEntities(enemies, [SORT_BY_LIFE], [SORT_ASCENDING]);
             if (willMissilesHit(lowestHealthEnemy)) {
-                fireMissiles(lowestHealthEnemy);
+                fireMissiles(lowestHealthEnemy)
             }
             // If for some reason unable to fire missiles on lowest health enemy, fire missile on something else
             if (willMissilesHit()) {
-                fireMissiles();
+                fireMissiles()
             }
         }
 
