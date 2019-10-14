@@ -24,7 +24,7 @@ update = function() {
     maybeTeleportIntoEnemies(target);
 
     if (willMeleeHit(target)) {
-        melee(target); // TODO what if we can charge at a different enemy than target.
+        melee(target);
     }
     moveTo(target); // TODO try to gain cardinality to charge?
 
@@ -48,7 +48,7 @@ sensorsAllowed = function() {
 
 // Choose target primarily based on who we can melee, secondarily by distance, third by life.
 chooseTarget = function() {
-    bestScore = -9999999
+    bestScore = -999999999
     bestEntity = null
     array1 = findEntities(ENEMY, BOT, false)
     for (i = 0; i < size(array1); i++) {
@@ -60,8 +60,11 @@ chooseTarget = function() {
         dy = abs(ey - cy)
         distE = dx+dy
 
-        scoreE = 10000*distE + lifeE
-        if (canMeleeE) scoreE += 100000
+        scoreE = 0;
+        if (canMeleeE) scoreE += 100000 // good if we can melee
+        scoreE -= 10000*distE // bad if high distance
+        scoreE -= lifeE // bad if high life
+
         if (scoreE > bestScore) {
             bestScore = scoreE
             bestEntity = array1[i]
@@ -134,7 +137,7 @@ scoreOffensiveTeleportLocation = function(cx, cy) {
 
     // small bias towards right, tiny bias towards vertical center
     score += 5*cx;
-    score += 2*abs(y - (arenaHeight/2 - 1));
+    score -= 2*abs(y - (arenaHeight/2 - 1));
 
     return score;
 }
@@ -162,10 +165,6 @@ teleportToBestOffensiveTeleportLocation = function() {
 }
 
 maybeTeleportIntoEnemies = function(target) {
-    if (willMeleeHit(target)) {
-        // Do not teleport from one melee into another!
-        return;
-    }
     if (!isZapping()) {
         // Do not teleport without zap!
         return;

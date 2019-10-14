@@ -53,26 +53,42 @@ specialActions = function() {
     if (FORWARD_MINE_ATTACKS) {
         // Start/continue laying forward mines if we don't see enemies
         if (d > 5 && forwardMinesState == 0 && countForwardMineAttacks < FORWARD_MINE_ATTACKS) {
-            forwardMinesState = 1;
+            forwardMinesState += 1;
             countForwardMineAttacks += 1;
         }
 
         if (forwardMinesState == 1) {
             if (reflectAllowed() && canReflect()) reflect();
-            if (d > 5) {
-                if (canLayMine()) layMine();
-                if (canMove('right')) move('right');
-            } else if (d == 5) {
-                forwardMinesState = 2;
-                if (canLayMine()) layMine();
-                if (canMove('left')) move('left');
+            if (canTeleport()) {
+                if (d >= 3) {
+                    if (canLayMine()) layMine();
+                    if (canMove('right')) move('right');
+                } else {
+                    forwardMinesState = 2;
+                    if (canTeleport(x-4, y)) teleport(x-4, y)
+                    if (canTeleport(x-3, y)) teleport(x-3, y)
+                    if (canTeleport(x-2, y-2)) teleport(x-2, y-2)
+                }
             } else {
-                forwardMinesState = 2;
+                if (d >= 5) {
+                    if (canLayMine()) layMine();
+                    if (canMove('right')) move('right');
+                } else {
+                    forwardMinesState = 2;
+                    if (canLayMine()) layMine();
+                    if (canMove('left')) move('left');
+                }
             }
+
         }
         if (forwardMinesState == 2) {
-            if (canLayMine()) forwardMinesState = 0;
-            if (canMove('left')) move('left');
+            if (d <= 2 && canMove('left')) move('left')
+            if (d <= 4 && willMissilesHit()) fireMissiles()
+            if (d >= 5) {
+                if (canLayMine()) layMine()
+                if (canActivateSensors()) activateSensors()
+                else forwardMinesState = 0
+            }
         }
     }
 
