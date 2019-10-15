@@ -1,16 +1,13 @@
 init = function() {
 
-    prevLife = 2000;
 }
 
 update = function() {
 
-    actualPrevLife = prevLife; // hacky
-    prevLife = life; // need to do this update here
-
-    xCPU = arenaWidth-2;
-    yCPU = (arenaHeight-1)/2
     d = getDistanceTo(xCPU, yCPU)
+    if (turn == 1 && canCloak() && !isCloaked()) {
+        cloak()
+    }
 
     if (canMove('right')) {
         move('right');
@@ -25,10 +22,22 @@ update = function() {
     cpu = findEntity(ENEMY, CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     closestBot = findEntity(ENEMY, BOT, SORT_BY_DISTANCE, SORT_ASCENDING);
     if (exists(cpu) && willArtilleryHit(cpu)) {
-        if (canReflect() && life < actualPrevLife-50 && distanceTo(closestBot) <= 4) {
-            reflect();
+        if (currLife >= prevLife-50) {
+            fireArtillery(cpu);
+        } else if (distanceTo(closestBot) <= 4) {
+            if (currLife > 800 && canReflect()) {
+                reflect()
+            }
+            if (currLife < 600 && canCloak() && !isCloaked()) {
+                cloak()
+            }
+        } else {
+            // dodge arty
+            if (x == arenaWidth-1 && canMove('left')) move('left')
+            if (x == arenaWidth-2 && canMove('right')) move('right')
         }
-        fireArtillery(cpu);
+        // fallback
+        fireArtillery(cpu)
     }
 
     // We can't fire at CPU, reflect before moving in.

@@ -82,7 +82,7 @@ specialActions = function() {
 
         }
         if (forwardMinesState == 2) {
-            if (d <= 2 && canMove('left')) move('left')
+            if (d <= 3 && canMove('left')) move('left')
             if (d <= 4 && willMissilesHit()) fireMissiles()
             if (d >= 5) {
                 if (canLayMine()) layMine()
