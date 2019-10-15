@@ -56,8 +56,8 @@ chooseTarget = function() {
         ey = getY(array1[i])
         lifeE = getLife(array1[i])
         canMeleeE = willMeleeHit(array1[i])
-        dx = abs(ex - cx)
-        dy = abs(ey - cy)
+        dx = abs(ex - x)
+        dy = abs(ey - y)
         distE = dx+dy
 
         scoreE = 0;
@@ -78,10 +78,6 @@ chooseTarget = function() {
         bestEntity = findEntity(ENEMY, CHIP | CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     }
     return bestEntity;
-}
-
-inDanger = function() {
-    return exists(findClosestEnemyBot());
 }
 
 retreatTeleport = function() {
@@ -116,7 +112,7 @@ maybeFinishOff = function(target) {
 }
 
 maybeZap = function(target) {
-    if (zapAllowed() && canZap() && inDanger()) {
+    if (zapAllowed() && canZap()) {
         if (distanceTo(target) <= 3) {
             zap();
         }

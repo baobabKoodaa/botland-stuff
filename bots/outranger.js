@@ -60,10 +60,6 @@ normalActions = function() {
     //TODO fallback?
 }
 
-reflectAllowed = function() {
-    return (turn >= REFLECT_ALLOWED_FROM_TURN);
-}
-
 /******************************************************************** Main AI ********************************************************************/
 
 maybeFireAtTarget = function(target) {

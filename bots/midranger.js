@@ -42,10 +42,6 @@ update = function () {
 
 };
 
-reflectAllowed = function() {
-    return (turn >= REFLECT_ALLOWED_FROM_TURN);
-}
-
 specialActions = function() {
     if (turn == SS_REFLECT_TURN && canReflect()) reflect()
 

@@ -1,3 +1,7 @@
+reflectAllowed = function() {
+    return (turn >= REFLECT_ALLOWED_FROM_TURN);
+}
+
 scoreDodgeLocation = function(cx, cy) {
     if ((cx != x || cy != y) && !canMoveTo(cx, cy)) return -99999999;
 

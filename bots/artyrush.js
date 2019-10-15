@@ -1,8 +1,12 @@
 init = function() {
+    REFLECT_ALLOWED_FROM_TURN = 1
 
+    commonInitProcedures()
 }
 
 update = function() {
+
+    commonStateUpdates()
 
     d = getDistanceTo(xCPU, yCPU)
     if (turn == 1 && canCloak() && !isCloaked()) {
