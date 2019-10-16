@@ -11,15 +11,62 @@ init = function() {
 update = function() {
 
     commonStateUpdates()
+    specialActions()
+    normalActions()
 
+}
+
+specialActions = function() {
+    if (turn == 1 && enemyBotsWithinDist(x, y, 1, 1) >= 2) {
+        flagDanger(x, y)
+        tryTeleport(x+5, y)
+        tryTeleport(x+4, y+1)
+        tryTeleport(x+4, y-1)
+    }
+    if (turn == 1 && getEntityAt(10,0)) flagCPUrush()
+    if (turn == 1 && getEntityAt(10,arenaHeight-1)) flagCPUrush()
+    if (turn == 2 && detectedCPUrush()) {
+        //TODO
+    }
+}
+
+flagCPUrush = function() {
+    sharedE = true
+}
+
+detectedCPUrush = function() {
+    return sharedE
+}
+
+flagDanger = function(cx, cy) {
+    sharedC = cx
+    sharedD = cy
+}
+
+targetNearDanger = function(target) {
+    if (!sharedC) return
+    ex = getX(target)
+    ey = getY(target)
+    dx = abs(ex - sharedC)
+    dy = abs(ey - sharedD)
+    if (dx+dy <= 2) return true
+    return false
+}
+
+normalActions = function() {
     target = chooseTarget();
     if (exists(target)) fight(target)
-    else goAfterCPUandChips()
+    else goHome()
 }
 
 fight = function() {
     maybeFinishOff(target);
     if (reflectAllowed()) reflect();
+    if (turn <= 4 && targetNearDanger(target)) {
+        if (x > getX(target)) tryMoveTo(x+1, y)
+        if (y > getY(target)) tryMoveTo(x, y+1)
+        if (y < getY(target)) tryMoveTo(x, y-1)
+    }
     maybeZap(target);
     maybeTeleportIntoEnemies(target);
 
@@ -29,16 +76,12 @@ fight = function() {
     moveTo(target); // TODO try to gain cardinality to charge?
 }
 
-goAfterCPUandChips = function() {
-    target = findEntity(ENEMY, CHIP | CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
-    if (!exists(target)) {
-        maybeSensors();
-        moveTo(xCPU, yCPU);
+goHome = function() {
+    if (getDistanceTo(xCPU, yCPU) < 2) {
+        if (canActivateSensors()) activateSensors()
+        move()
     }
-    if (willMeleeHit(target)) {
-        melee(target);
-    }
-    moveTo(target)
+    moveTowards(xCPU, yCPU)
 }
 
 zapAllowed = function() {
@@ -110,7 +153,7 @@ maybeZap = function(target) {
         if (distanceTo(target) <= 2) {
             zap();
         }
-        if (distanceTo(target) <= 5 && canTeleport()) {
+        if (distanceTo(target) <= 5 && canTeleportNextTo(target)) {
             // Why 5? We could teleport next to a bot at distance 6, but we are likely to get a better teleport location (by virtue of having more options) if we are a bit closer.
             zap();
         }
@@ -132,23 +175,33 @@ scoreOffensiveTeleportLocation = function(cx, cy) {
     return score;
 }
 
+canTeleportNextTo = function(target) {
+    ex = getX(target)
+    ey = getY(target)
+    if (canActuallyTeleport(ex+1, y)) return true
+    if (canActuallyTeleport(ex-1, y)) return true
+    if (canActuallyTeleport(ex, y+1)) return true
+    if (canActuallyTeleport(ex, y-1)) return true
+    return false
+}
+
 probablyTeleportToBestOffensiveTeleportLocation = function() {
-    bestX = x;
-    bestY = y;
-    bestScore = -99999;
+    bestX = x
+    bestY = y
+    bestScore = -99999
     for (cx=x-5; cx<=x+5; cx++) {
         for (cy=y-5; cy<=y+5; cy++) {
             if (canActuallyTeleport(cx, cy)) {
                 score = scoreOffensiveTeleportLocation(cx, cy);
                 if (score > bestScore) {
-                    bestScore = score;
-                    bestX = cx;
-                    bestY = cy;
+                    bestScore = score
+                    bestX = cx
+                    bestY = cy
                 }
             }
         }
     }
-    if (bestScore >= 1000) teleport(bestX, bestY);
+    if (bestScore >= 1000) teleport(bestX, bestY)
 }
 
 maybeTeleportIntoEnemies = function(target) {
@@ -160,4 +213,3 @@ maybeTeleportIntoEnemies = function(target) {
         probablyTeleportToBestOffensiveTeleportLocation();
     }
 }
-

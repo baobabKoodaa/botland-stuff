@@ -1,3 +1,7 @@
+moveTowards = function(cx, cy) {
+    moveTo(cx, cy)
+}
+
 outOfBounds = function(cx, cy) {
     return (cx < 0 || cy < 0 || cx >= arenaWidth || cy >= arenaHeight);
 }
@@ -6,9 +10,13 @@ reflectAllowed = function() {
     return (turn >= REFLECT_ALLOWED_FROM_TURN && canReflect())
 }
 
-tryTeleport = function(cx, cy) {
+canActuallyTeleport = function(cx, cy) {
     // The canTeleport method doesnt check if there is an entity at target location!
-    if (canTeleport(cx, cy) && !getEntityAt(cx, cy)) teleport(cx, cy)
+    return (canTeleport(cx, cy) && !getEntityAt(cx, cy))
+}
+
+tryTeleport = function(cx, cy) {
+    if (canActuallyTeleport(cx, cy)) teleport(cx, cy)
 }
 
 triggerCoordinatedTeleport = function() {
