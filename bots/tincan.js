@@ -13,13 +13,13 @@ update = function() {
     commonStateUpdates()
 
     target = chooseTarget();
-    if (!exists(target)) {
-        maybeSensors();
-        maybeRetreatForCooldowns();
-        moveTo(xCPU, yCPU);
-    }
+    if (exists(target)) fight(target)
+    else goAfterCPUandChips()
+}
+
+fight = function() {
     maybeFinishOff(target);
-    maybeReflect();
+    if (reflectAllowed()) reflect();
     maybeZap(target);
     maybeTeleportIntoEnemies(target);
 
@@ -27,15 +27,22 @@ update = function() {
         melee(target);
     }
     moveTo(target); // TODO try to gain cardinality to charge?
+}
 
-};
+goAfterCPUandChips = function() {
+    target = findEntity(ENEMY, CHIP | CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
+    if (!exists(target)) {
+        maybeSensors();
+        moveTo(xCPU, yCPU);
+    }
+    if (willMeleeHit(target)) {
+        melee(target);
+    }
+    moveTo(target)
+}
 
 zapAllowed = function() {
     return (turn >= ZAP_ALLOWED_FROM_TURN);
-}
-
-reflectAllowed = function() {
-    return (turn >= REFLECT_ALLOWED_FROM_TURN)
 }
 
 teleportAllowed = function() {
@@ -74,9 +81,6 @@ chooseTarget = function() {
     if (!exists(bestEntity)) {
         // TODO alarm target set by other units?
     }
-    if (!exists(bestEntity)) {
-        bestEntity = findEntity(ENEMY, CHIP | CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
-    }
     return bestEntity;
 }
 
@@ -95,16 +99,6 @@ maybeSensors = function() {
     }
 }
 
-maybeReflect = function() {
-    if (reflectAllowed() && canReflect() && inDanger()) {
-        reflect();
-    }
-}
-
-maybeRetreatForCooldowns = function() {
-    if (!canZap() || !canTeleport()) move('left');
-}
-
 maybeFinishOff = function(target) {
     if (getLife(target) <= 550 && willMeleeHit(target)) {
         melee(target);
@@ -113,7 +107,7 @@ maybeFinishOff = function(target) {
 
 maybeZap = function(target) {
     if (zapAllowed() && canZap()) {
-        if (distanceTo(target) <= 3) {
+        if (distanceTo(target) <= 2) {
             zap();
         }
         if (distanceTo(target) <= 5 && canTeleport()) {
@@ -129,7 +123,7 @@ scoreOffensiveTeleportLocation = function(cx, cy) {
     score += 1000*enemyBotsWithinDist(cx, cy, 1, 1);
     score += 300*enemyBotsWithinDist(cx, cy, 2, 2); // zapper does 50% dmg to diagonally adjacent enemies. note that this also gives score for cardinally dist2 enemies (TODO fix that).
 
-    // TODO some score for chips and cpus
+    // TODO some score for chips and cpus (but only if there are also bots to hurt!)
 
     // small bias towards right, tiny bias towards vertical center
     score += 5*cx;

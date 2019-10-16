@@ -1,7 +1,3 @@
-reflectAllowed = function() {
-    return (turn >= REFLECT_ALLOWED_FROM_TURN);
-}
-
 scoreDodgeLocation = function(cx, cy) {
     if ((cx != x || cy != y) && !canMoveTo(cx, cy)) return -99999999;
 
@@ -77,7 +73,7 @@ willAnyWeaponHitAnyBot = function() {
 // If we can do something useful, wasting our action on a move has some cost.
 estimateActionCost = function() {
     if (willAnyWeaponHitAnyBot()) return 3;
-    if (reflectAllowed() && canReflect()) return 1;
+    if (reflectAllowed()) return 1;
     return 0;
 }
 
@@ -90,7 +86,7 @@ probablyDodge = function() {
     scoreRight = scoreDodgeLocation(x+1, y) - actionCost;
     scoreCurrent = scoreDodgeLocation(x, y); // No actionCost here, because if we stay, we get to act.
 
-    debugLog('T' + turn + 'u(' + scoreUp + ') d(' + scoreDown + ') l(' + scoreLeft + ') r(' + scoreRight + ') c(' + scoreCurrent + ')');
+    //debugLog('T' + turn + 'u(' + scoreUp + ') d(' + scoreDown + ') l(' + scoreLeft + ') r(' + scoreRight + ') c(' + scoreCurrent + ')');
 
     // Choose best score, break ties with a directional preference: vertical > left > right
     scoreBest = max(scoreCurrent, scoreUp, scoreDown, scoreLeft, scoreUp);

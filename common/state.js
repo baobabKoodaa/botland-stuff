@@ -4,7 +4,9 @@ commonInitProcedures = function() {
     turn = 0;
     currLife = 2000;
     currDistToClosestBot = 999
-    lastDodgeTurn = -1000;
+    lastDodgeTurn = -1000
+    startX = x
+    startY = y
 
     HEAT_LONGEVITY = 4
     HEAT_SIT = 30
@@ -19,6 +21,7 @@ commonStateUpdates = function() {
     turn += 1;
     prevLife = currLife;
     currLife = life;
+    if (canLayMine()) hasBeenAbleToLayMine = true
     prevDistToClosestBot = currDistToClosestBot;
     currDistToClosestBot = distToClosestEnemyBot(x, y);
 }
@@ -31,3 +34,13 @@ assignId = function() {
     id = sharedA;
     sharedA += 1;
 };
+
+probablyHasLandMines = function() {
+    if (canLayMine()) return true
+    if (hasBeenAbleToLayMine) return true
+    return false
+}
+
+probablyStandingOnMine = function() {
+    return probablyHasLandMines() && !canLayMine()
+}

@@ -2,7 +2,7 @@ init = function() {
 
     DODGE_ARTILLERY = 1
 
-    FORWARD_MINE_ATTACKS = 0;
+    FORWARD_MINE_ATTACKS = 1;
     SS_BACKWARD_MINES = 0;
     SS_BACKWARD_LEFT = 1;
 
@@ -25,7 +25,6 @@ init = function() {
     DODGE_PENALTY_DIST_2_CARDINALITY_EXTRA = 4 // melee charge cardinality in addition to laser!
     DODGE_PENALTY_EDGE_OF_MAP = 1
 
-
     countForwardMineAttacks = 0;
     countBackwardMineAttacks = 0;
     forwardMinesState = 0;
@@ -46,24 +45,29 @@ specialActions = function() {
     if (turn == SS_REFLECT_TURN && canReflect()) reflect()
 
     d = distToClosestEnemyBot(x, y)
-    if (FORWARD_MINE_ATTACKS) {
+    if (FORWARD_MINE_ATTACKS && probablyHasLandMines()) {
         // Start/continue laying forward mines if we don't see enemies
         if (d > 5 && forwardMinesState == 0 && countForwardMineAttacks < FORWARD_MINE_ATTACKS) {
             forwardMinesState += 1;
             countForwardMineAttacks += 1;
         }
 
+        if (coordinatedTeleportTriggered()) {
+            forwardMinesState = 2
+            tryDefensiveTeleport()
+        }
+
         if (forwardMinesState == 1) {
-            if (reflectAllowed() && canReflect()) reflect();
+            if (reflectAllowed()) reflect();
             if (canTeleport()) {
+                if (d < 3) {
+                    forwardMinesState = 2
+                    triggerCoordinatedTeleport()
+                    tryDefensiveTeleport()
+                }
                 if (d >= 3) {
                     if (canLayMine()) layMine();
                     if (canMove('right')) move('right');
-                } else {
-                    forwardMinesState = 2;
-                    if (canTeleport(x-4, y)) teleport(x-4, y)
-                    if (canTeleport(x-3, y)) teleport(x-3, y)
-                    if (canTeleport(x-2, y-2)) teleport(x-2, y-2)
                 }
             } else {
                 if (d >= 5) {
@@ -88,7 +92,7 @@ specialActions = function() {
         }
     }
 
-    if (SS_BACKWARD_MINES) {
+    if (SS_BACKWARD_MINES && probablyHasLandMines()) {
         lastMineTurn = 2*SS_BACKWARD_MINES - 1
         lastLeftTurn = lastMineTurn + SS_BACKWARD_LEFT
         if (turn <= lastMineTurn) {
@@ -99,13 +103,37 @@ specialActions = function() {
         if (turn <= lastLeftTurn) {
             if (canMove('left')) move('left');
         }
+        if (turn == lastLeftTurn+1) {
+            // prevent whipsawing back to right
+            if (willMissilesHit()) fireMissiles()
+            if (canLayMine()) layMine()
+            if (canActivateSensors()) activateSensors()
+            return
+        }
+    }
+}
+
+tryDefensiveTeleport = function() {
+    if (y <= arenaHeight/2) {
+        tryTeleport(x-3, y-1)
+        tryTeleport(x-4, y)
+        tryTeleport(x-2, y-2)
+        tryTeleport(x-3, y)
+        tryTeleport(x-1, y-3)
+        tryTeleport(x, y-4)
+    } else {
+        tryTeleport(x-3, y+1)
+        tryTeleport(x-4, y)
+        tryTeleport(x-2, y+2)
+        tryTeleport(x-3, y)
+        tryTeleport(x-1, y+3)
+        tryTeleport(x, y+4)
     }
 }
 
 
-
-
 normalActions = function() {
+
     // If we don't see anything, then move towards the CPU
     closestEnemy = findEntity(ENEMY, ANYTHING, SORT_BY_DISTANCE, SORT_ASCENDING);
     if (!exists(closestEnemy)) {
@@ -119,9 +147,9 @@ normalActions = function() {
         xe = getX(closestBot)
         ye = getY(closestBot)
 
-        // Maybe zap
-        if (canZap() && currDistToClosestBot == 1 && currLife > 1000 && getLife(closestBot) > 750) {
-            zap()
+        if (currDistToClosestBot == 1 && canTeleport()) {
+            // Try to teleport towards home corner TODO evaluate best defensive teleport target
+            tryDefensiveTeleport()
         }
 
         // Maybe lay mine
@@ -135,23 +163,31 @@ normalActions = function() {
 
         }
         // Maybe lure enemy into mine that we are standing on //TODO break cardinality here or not?
-        if (currDistToClosestBot <= 1 && !canLayMine()) {
-            if (x == xe+1) {
-                tryMoveTo(x+1, y)
+        if (currDistToClosestBot <= 1) {
+
+            if (probablyStandingOnMine()) {
+                if (x == xe + 1) {
+                    tryMoveTo(x + 1, y)
+                }
+                if (x == xe - 1) {
+                    tryMoveTo(x - 1, y)
+                }
+                if (y == ye + 1) {
+                    tryMoveTo(x, y + 1)
+                }
+                if (y == ye - 1) {
+                    tryMoveTo(x, y - 1)
+                }
+                // else desired direction is blocked
             }
-            if (x == xe-1) {
-                tryMoveTo(x-1, y)
-            }
-            if (y == ye+1) {
-                tryMoveTo(x, y+1)
-            }
-            if (y == ye-1) {
-                tryMoveTo(x, y-1)
-            }
-            // else desired direction is blocked
         }
-        if (reflectAllowed() && canReflect()) {
+
+        // Alternate between reflect and cloak, with a priority on reflecting.
+        if (reflectAllowed()) {
             reflect()
+        }
+        if (!isReflecting() && !canReflect() && canCloak()) {
+            cloak()
         }
 
         // If we took damage last turn, try to evade somehow (-50 because splash damage is ok)

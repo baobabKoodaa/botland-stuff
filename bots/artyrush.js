@@ -1,5 +1,8 @@
 init = function() {
+    DODGE_ARTILLERY = 0
+    ALTERNATE_REFLECT_CLOAK = 1
     REFLECT_ALLOWED_FROM_TURN = 1
+
 
     commonInitProcedures()
 }
@@ -13,13 +16,9 @@ update = function() {
         cloak()
     }
 
-    if (canMove('right')) {
-        move('right');
-    }
-
-    // Typically we want to stay back in early stages of the round, fire a couple shots from afar with sensors.
-    if (d == 7 && canActivateSensors()) {
-        activateSensors();
+    if (ALTERNATE_REFLECT_CLOAK) {
+        if (!isCloaked() && reflectAllowed()) reflect()
+        if (!isReflecting() && canCloak()) cloak()
     }
 
     // If we can artillery CPU let's do it!
@@ -29,14 +28,13 @@ update = function() {
         if (currLife >= prevLife-50) {
             fireArtillery(cpu);
         } else if (distanceTo(closestBot) <= 4) {
-            if (currLife > 800 && canReflect()) {
+            if (currLife > 800 && !isCloaked() && canReflect()) {
                 reflect()
             }
-            if (currLife < 600 && canCloak() && !isCloaked()) {
+            if (currLife < 600 && !isReflecting() && canCloak() && !isCloaked()) {
                 cloak()
             }
-        } else {
-            // dodge arty
+        } else if (DODGE_ARTILLERY) {
             if (x == arenaWidth-1 && canMove('left')) move('left')
             if (x == arenaWidth-2 && canMove('right')) move('right')
         }
@@ -45,20 +43,19 @@ update = function() {
     }
 
     // We can't fire at CPU, reflect before moving in.
-    if (canReflect() && distanceTo(closestBot) <= 5) {
+    if (canReflect() && !isCloaked() && distanceTo(closestBot) <= 5) {
         reflect();
     }
 
-    // If we can't fire at CPU let's try to get closer to it. We are already as right as we can go, so move vertically.
-    if (y < yCPU && canMoveTo(x, y+1)) {
-        moveTo(x, y+1);
-    }
-    if (y > yCPU && canMoveTo(x, y-1)) {
-        moveTo(x, y-1);
-    }
+    // If we can't fire at CPU let's try to get closer to it.
+    if (x < xCPU) tryMoveTo(x+1, y)
+    if (y < yCPU) tryMoveTo(x, y+1)
+    if (y > yCPU) tryMoveTo(x, y-1)
+    if (x < xCPU+1) tryMoveTo(x+1, y)
 
     // Fallback to things we can do without moving from our hiding spot.
-    if (willArtilleryHit()) fireArtillery();
-    if (willMissilesHit()) fireMissiles();
-    if (canActivateSensors()) activateSensors();
+    if (canReflect()) reflect()
+    if (willArtilleryHit()) fireArtillery()
+    if (willMissilesHit()) fireMissiles()
+    if (canActivateSensors()) activateSensors()
 };

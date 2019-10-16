@@ -1,7 +1,6 @@
 init = function() {
     DODGE_ARTILLERY = 1
     REFLECT_ALLOWED_FROM_TURN = 1
-    DESTROY_CHIPS_AT_START = 1
 
 
     DODGE_COOLDOWN = 2;
@@ -33,12 +32,7 @@ update = function() {
 }
 
 specialActions = function() {
-    if (life < 2000 || currDistToClosestBot <= 5) DESTROY_CHIPS_AT_START = false
-    if (DESTROY_CHIPS_AT_START) {
-        chip = findEntity(ENEMY, CHIP, SORT_BY_DISTANCE, SORT_ASCENDING)
-        if (exists(chip) && willArtilleryHit(chip)) fireArtillery(chip)
-        else DESTROY_CHIPS_AT_START = false
-    }
+
 }
 
 normalActions = function() {
@@ -51,13 +45,13 @@ normalActions = function() {
     if (reflectAllowed() && currDistToClosestBot <= 5) {
         reflect()
     }
-    if (canActivateSensors() && currDistToClosestBot > 5 && prevDistToClosestBot <= 5) {
+    maybeFire()
+    if (canShield()) shield()
+    if (canActivateSensors()) {
         activateSensors()
     }
-
-    maybeFire()
-    maybeMoveTowardsCPU()
-    //TODO fallback?
+    if (canLayMine()) layMine()
+    maybeMoveTowardsStartLocation()
 }
 
 /******************************************************************** Main AI ********************************************************************/
@@ -106,13 +100,11 @@ moveIfSafe = function(cx, cy) {
     tryMoveTo(cx, cy);
 }
 
-maybeMoveTowardsCPU = function() {
-    moveIfSafe(x+1, y)
-    if (y < (arenaHeight/2 - 4)) {
-        moveIfSafe(x, y+1);
-    } else if (y > (arenaHeight/2 + 3)) {
-        moveIfSafe(x, y-1);
-    }
+maybeMoveTowardsStartLocation = function() {
+    if (x < startX) moveIfSafe(x+1, y)
+    if (x > startX) moveIfSafe(x-1, y)
+    if (y < startY) moveIfSafe(x, y+1)
+    if (y > startY) moveIfSafe(x, y-1)
 }
 
 
