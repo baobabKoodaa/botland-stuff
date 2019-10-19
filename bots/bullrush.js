@@ -1,14 +1,9 @@
 init = function() {
-    prevLife = 2000;
+    commonInitProcedures()
 }
 
 update = function() {
-
-    actualPrevLife = prevLife;
-    prevLife = life;
-
-    xCPU = arenaWidth-2;
-    yCPU = (arenaHeight-1)/2
+    commonStateUpdates()
     cpu = findEntity(ENEMY, CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     closestBot = findEntity(ENEMY, BOT, SORT_BY_DISTANCE, SORT_ASCENDING);
 
