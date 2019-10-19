@@ -120,8 +120,8 @@ maybeZap = function(target) {
 scoreOffensiveTeleportLocation = function(cx, cy) {
     score = 0;
 
-    score += 1000*enemyBotsWithinDist(cx, cy, 1, 1);
-    score += 300*enemyBotsWithinDist(cx, cy, 2, 2); // zapper does 50% dmg to diagonally adjacent enemies. note that this also gives score for cardinally dist2 enemies (TODO fix that).
+    score += 1000*countEnemyBotsWithinDist(cx, cy, 1, 1);
+    score += 300*countEnemyBotsWithinDist(cx, cy, 2, 2); // zapper does 50% dmg to diagonally adjacent enemies. note that this also gives score for cardinally dist2 enemies (TODO fix that).
 
     // TODO some score for chips and cpus (but only if there are also bots to hurt!)
 

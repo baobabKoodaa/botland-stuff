@@ -19,6 +19,7 @@ init = function() {
     DODGE_PENALTY_EDGE_OF_MAP = 1
 
     commonInitProcedures()
+    initializeHeatmap()
 }
 
 update = function() {

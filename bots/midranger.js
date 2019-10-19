@@ -30,7 +30,8 @@ init = function() {
     forwardMinesState = 0;
     lastMineLayTurn = -1000;
 
-    commonInitProcedures();
+    commonInitProcedures()
+    initializeHeatmap()
 }
 
 update = function () {
@@ -39,7 +40,7 @@ update = function () {
     specialActions()
     normalActions()
 
-};
+}
 
 specialActions = function() {
     if (turn == SS_REFLECT_TURN && canReflect()) reflect()
@@ -182,14 +183,6 @@ normalActions = function() {
             }
         }
 
-        // Alternate between reflect and cloak, with a priority on reflecting.
-        if (reflectAllowed()) {
-            reflect()
-        }
-        if (!isReflecting() && !canReflect() && canCloak()) {
-            cloak()
-        }
-
         // If we took damage last turn, try to evade somehow (-50 because splash damage is ok)
         if (isLocationHot(x, y)) {
             // Cooldown for evade so we dont waste all our turns evading. This is more crucial to midranger compared to outranger,
@@ -198,6 +191,14 @@ normalActions = function() {
                 lastDodgeTurn = turn
                 probablyDodge()
             }
+        }
+
+        // Alternate between reflect and cloak, with a priority on reflecting.
+        if (reflectAllowed()) {
+            reflect()
+        }
+        if (!isReflecting() && !canReflect() && canCloak()) {
+            cloak()
         }
 
         // Try to fire missiles

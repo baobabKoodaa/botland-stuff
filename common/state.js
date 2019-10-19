@@ -28,7 +28,7 @@ commonStateUpdates = function() {
 
 initializeSharedVariables = function() {
     if (!exists(sharedA)) sharedA = 0 // Next free id
-    if (!exists(sharedB)) sharedB = initializeHeatmap()
+    // sharedB reserved for shared array2 (different use cases depending on bot)
 }
 assignId = function() {
     id = sharedA;
