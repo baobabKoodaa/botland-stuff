@@ -1,5 +1,3 @@
-/******************************************************************** Heatmap ********************************************************************/
-
 /** Heatmap format:
  * 	    array2[i] = last turn during which this tile should be counted as heated
  *      array2[i+1] = x coordinate of tile
@@ -10,13 +8,15 @@
  */
 
 initializeHeatmap = function() {
-    array2 = []
-    array2[0] = 1 // Next free index in heatmap.
-    return array2
+    if (!exists(sharedB)) {
+        array2 = []
+        array2[0] = 1 // Next free index in heatmap.
+        sharedB = array2
+    }
 }
 
 findTileIndexFromHeatmap = function(cx, cy) {
-    for (i=1; i<array2[0]; i+=4) {
+    for (i=1; i<=90; i+=4) {
         hx = array2[i+1];
         hy = array2[i+2];
         if (hx == cx && hy == cy) {
