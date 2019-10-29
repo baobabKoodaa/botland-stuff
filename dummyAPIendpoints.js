@@ -45,6 +45,7 @@ randInt = function() {}
 reflect = function() {}
 size = function() {}
 shield = function() {}
+taunt = function() {}
 teleport = function() {}
 willMissilesHit = function() {}
 willLasersHit = function() {}

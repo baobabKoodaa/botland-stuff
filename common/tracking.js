@@ -1,15 +1,6 @@
 /*
  * Using array2 to track multiple different things and share info between bots by using sharedB.
- * See initializeTracking to understand what is tracked and where.
- *
- * Value encoding:
- *      0093000400031210
- *      AAAABBBBttttxxyy (valA-valB-turn-x-y)
- *      x,y are coordinates
- *      turn is the turn when this tracking information was saved
- *      valA, valB are additional information which can be saved if needed
  */
-
 
 initializeTracking = function() {
     POINTER_NEXT_AVAILABLE_ENEMY_INDEX = 0
@@ -28,26 +19,7 @@ initializeTracking = function() {
 
 }
 
-saveEncodedValue = function(enc, iPointer, iFirstVal, iLastVal) {
-    array2 = sharedB
-
-    // Check if value already exists; don't save it twice!
-    for (i=iFirstVal; i<=iLastVal; i+=1) {
-        if (array2[i] == enc) return
-    }
-
-    // Value doesn't already exist; let's save it to next available location.
-    iNextFree = array2[iPointer]
-    array2[iNextFree] = enc
-    array2[iPointer] += 1
-    if (array2[iPointer] > iLastVal) array2[iPointer] = iFirstVal // overflow index to rewrite earlier entries next time
-    sharedB = array2
-}
-
-enemySpottedAt = function(cx, cy) {
-    enc = encode(0,0, turn, cx, cy)
-    saveEncodedValue(enc, POINTER_NEXT_AVAILABLE_ENEMY_INDEX, MIN_ENEMY_LOCATION_INDEX, MAX_ENEMY_LOCATION_INDEX)
-}
+/************************** Enemy location high level functions **********************************/
 
 updateEnemyLocations = function() {
     array1 = findEntities(ENEMY, BOT, false)
@@ -57,6 +29,8 @@ updateEnemyLocations = function() {
         enemySpottedAt(ex, ey)
     }
 }
+
+/************************** Shielding high level functions **********************************/
 
 /*
 *      priority is measured as distance to closest enemy bot, lower number means higher priority
@@ -96,18 +70,44 @@ pollPrioritizedShieldWithinRange = function() {
     return bestShield
 }
 
+/************************** Low level functions **********************************/
+
+saveEncodedValue = function(enc, iPointer, iFirstVal, iLastVal) {
+    array2 = sharedB
+
+    // Check if value already exists; don't save it twice!
+    for (i=iFirstVal; i<=iLastVal; i+=1) {
+        if (array2[i] == enc) return
+    }
+
+    // Value doesn't already exist; let's save it to next available location.
+    iNextFree = array2[iPointer]
+    array2[iNextFree] = enc
+    array2[iPointer] += 1
+    if (array2[iPointer] > iLastVal) array2[iPointer] = iFirstVal // overflow index to rewrite earlier entries next time
+    sharedB = array2
+}
+
+enemySpottedAt = function(cx, cy) {
+    enc = encode(0,0, turn, cx, cy)
+    saveEncodedValue(enc, POINTER_NEXT_AVAILABLE_ENEMY_INDEX, MIN_ENEMY_LOCATION_INDEX, MAX_ENEMY_LOCATION_INDEX)
+}
+
 /**************************** Encoding/decoding values. **********************************/
+
+/*
+ *      0093000400031210
+ *      AAAABBBBttttxxyy (valA-valB-turn-x-y)
+ *      x,y are coordinates
+ *      turn is the turn when this tracking information was saved
+ *      valA, valB are additional information which can be saved if needed
+ */
 
 // Note: a <= 9006 due to JS integer limit.
 encode = function(a, b, t, cx, cy) {
     if (a > 9006 || b > 9999 || t > 9999 || cx > 99 || cy > 99) debugLog("encodeError a="+a+",b="+b+",t="+t+",cx="+cx+",cy="+cy)
     return a*1000000000000 + b*100000000 + t*10000 + cx*100 + cy
 }
-
-/*
- *      0093000400031210
- *      AAAABBBBttttxxyy (valA-valB-turn-x-y)
- */
 
 decodePriority = function(enc) {
     return decodeB(enc)
