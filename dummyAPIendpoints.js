@@ -27,6 +27,7 @@ findEntity = function() {}
 fireArtillery = function() {}
 fireLasers = function() {}
 fireMissiles = function() {}
+floor = function() {}
 getDistanceTo = function() {}
 getEntityAt = function() {}
 getLife = function() {}
