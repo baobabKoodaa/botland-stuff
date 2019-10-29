@@ -6,17 +6,47 @@ init = function() {
     ZAP_ALLOWED_FROM_TURN = 1;
 
     commonInitProcedures();
+
+    if (!exists(sharedE)) {
+        sharedE = 0 // x of the right-most known enemy
+    }
+    if (!exists(sharedB)) {
+        sharedB = randInt(0, 2)
+    }
 };
 
 update = function() {
 
+    if (sharedA <= 7) {
+        // If at least 2 bots have died, disable left-swarm-in-the-beginning
+        sharedE = 13
+    }
+
     commonStateUpdates()
+    updateStateOfRightMostKnownEnemy()
     specialActions()
     normalActions()
 
 }
 
+updateStateOfRightMostKnownEnemy = function() {
+    array1 = findEntities(ENEMY, BOT, false)
+    for (i = 0; i < size(array1); i++) {
+        ex = getX(array1[i])
+        ey = getY(array1[i])
+        sharedE = max(sharedE, ex)
+    }
+}
+
 specialActions = function() {
+    if (turn <= 2 && sharedB == 0 && sharedE <= 1 && y >= 2 && y <= 8) {
+        // Try to disrupt enemy strategy by randomly starting 1/2 matches by moving central units 2 steps back to create a unison line. Only when enemy deployed to the very left.
+        if (canMoveTo(x+1, y)) moveTo(x+1, y)
+        // Fallback if something weird happened
+        if (canReflect()) reflect()
+        if (willMeleeHit()) melee()
+        move()
+    }
     if (turn == 1 && countEnemyBotsWithinDist(x, y, 1, 1) >= 2) {
         flagDanger(x, y)
         tryTeleport(x+5, y)
@@ -56,13 +86,20 @@ targetNearDanger = function(target) {
 normalActions = function() {
     target = chooseTarget();
     if (exists(target)) fight(target)
-    else goHome()
+    else if (sharedE <= 4) {
+        goLeft()
+    } else if (turn < 25) {
+        goHome()
+    } else {
+        goLeft()
+    }
 }
 
 fight = function() {
-    maybeFinishOff(target);
-    if (reflectAllowed()) reflect();
+    maybeFinishOff(target)
+    if (reflectAllowed() && currDistToClosestBot > 1) reflect()
     if (turn <= 4 && targetNearDanger(target)) {
+        // move away from danger at start
         if (x > getX(target)) tryMoveTo(x+1, y)
         if (y > getY(target)) tryMoveTo(x, y+1)
         if (y < getY(target)) tryMoveTo(x, y-1)
@@ -76,12 +113,22 @@ fight = function() {
     moveTo(target); // TODO try to gain cardinality to charge?
 }
 
+goLeft = function() {
+    if (x == 0) sharedE = 5 // if turn<25, then bots who dont see enemies should start moving towards home now
+    if (canMoveTo(x-1, y)) moveTo(x-1, y)
+    if (y < yCPU && canMoveTo(x, y+1)) moveTo(x, y+1)
+    if (y > yCPU && canMoveTo(x, y-1)) moveTo(x, y-1)
+}
+
 goHome = function() {
     if (getDistanceTo(xCPU, yCPU) < 2) {
         if (canActivateSensors()) activateSensors()
         move()
     }
-    moveTowards(xCPU, yCPU)
+    if (x < xCPU-1 && canMoveTo(x+1, y)) moveTo(x+1, y)
+    if (y < yCPU-2 && canMoveTo(x, y+1)) moveTo(x, y+1)
+    if (y > yCPU+2 && canMoveTo(x, y-1)) moveTo(x, y-1)
+    move()
 }
 
 zapAllowed = function() {
