@@ -1,6 +1,6 @@
 init = function() {
-    ALTERNATE_REFLECT_CLOAK_ALLOWED_FROM_TURN = 5
-    REFLECT_ALLOWED_FROM_TURN = 5
+    ALTERNATE_REFLECT_CLOAK_ALLOWED_FROM_TURN = 2
+    REFLECT_ALLOWED_FROM_TURN = 2
 
     commonInitProcedures()
 }
@@ -11,9 +11,7 @@ update = function() {
 
     d = getDistanceTo(xCPU, yCPU)
 
-    if (turn == 5 && canCloak() && !isCloaked()) {
-        cloak()
-    }
+    if (turn == 1) teleport(x+5, y)
 
     if (turn >= ALTERNATE_REFLECT_CLOAK_ALLOWED_FROM_TURN) {
         if (reflectAllowed() && !isCloaked() && !isReflecting() && countEnemyBotsWithinDist(x, y, 5, 5) >= 1) reflect()
@@ -32,9 +30,6 @@ update = function() {
             if (currLife < 600 && !isReflecting() && canCloak() && !isCloaked()) {
                 cloak()
             }
-        } else if (DODGE_ARTILLERY) {
-            if (x == arenaWidth-1 && canMove('left')) move('left')
-            if (x == arenaWidth-2 && canMove('right')) move('right')
         }
         // fallback
         fireArtillery(cpu)

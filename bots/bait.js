@@ -1,11 +1,18 @@
+init = function() {
+    commonInitProcedures()
+}
+
 update = function() {
+    commonStateUpdates()
+
+    if (turn > 10) move('right')
+
     if (canReflect()) {
         reflect();
     }
     if (canShield()) {
         shield();
     }
-    //move();
     if (y < arenaHeight/2) {
         moveTo(0, 0);
     }
