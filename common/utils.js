@@ -12,7 +12,7 @@ reflectAllowed = function() {
 
 canActuallyTeleport = function(cx, cy) {
     // The canTeleport method doesnt check if there is an entity at target location!
-    return (canTeleport(cx, cy) && !getEntityAt(cx, cy))
+    return (!outOfBounds(cx, cy) && canTeleport(cx, cy) && !getEntityAt(cx, cy))
 }
 
 tryTeleport = function(cx, cy) {
@@ -21,6 +21,12 @@ tryTeleport = function(cx, cy) {
 
 triggerCoordinatedTeleport = function() {
     sharedC = turn
+}
+
+tryMelee = function(cx, cy) {
+    e = getEntityAt(cx, cy)
+    if (!exists(e)) return
+    if (willMeleeHit(e)) melee(e)
 }
 
 coordinatedTeleportTriggered = function() {
