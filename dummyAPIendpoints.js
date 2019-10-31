@@ -43,6 +43,7 @@ move = function() {}
 pursue = function() {}
 randInt = function() {}
 reflect = function() {}
+repair = function() {}
 size = function() {}
 shield = function() {}
 taunt = function() {}
@@ -51,6 +52,7 @@ willMissilesHit = function() {}
 willLasersHit = function() {}
 willMeleeHit = function() {}
 willArtilleryHit = function() {}
+willRepair = function() {}
 zap = function() {}
 
 
@@ -66,5 +68,6 @@ ANYTHING = ""
 SORT_BY_DISTANCE = ""
 SORT_BY_LIFE = ""
 SORT_ASCENDING = ""
+SORT_DESCENDING = ""
 arenaWidth = 0
 arenaHeight = 0

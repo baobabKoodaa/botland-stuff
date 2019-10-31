@@ -1,18 +1,33 @@
 var fs = require('fs');
 var path = require('path');
 
+function parseImports(bot) {
+    var imports = []
+    const filepath = path.resolve("bots", bot+".js")
+    var content = fs.readFileSync(filepath, 'utf8')
+    var lines = content.split('\n')
+    for(var i=0; i<lines.length; i++) {
+        var line = lines[i].trim()
+        if (line.startsWith("//!import")) {
+            imports.push(line.split(" ")[1])
+        }
+    }
+    return imports
+}
+
 function minify(jsFileContent) {
     out = []
     // Remove comments
-    var content = jsFileContent.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1'); // https://stackoverflow.com/a/15123777/4490400
-    var lines = content.split('\n');
+    var content = jsFileContent.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1') // https://stackoverflow.com/a/15123777/4490400
+    var lines = content.split('\n')
     for(var i=0; i<lines.length; i++){
-        var line = lines[i];
+        var line = lines[i]
         // Remove whitespace
-        line = line.trim();
+        line = line.trim()
         // Remove semicolons
         if (line.slice(-1) == ';') line = line.substring(0, line.length-1)
-        out.push(line)
+        // Remove empty lines
+        if (line.length > 0) out.push(line)
     }
     return out
 }
@@ -23,7 +38,7 @@ function minifyBotFile(bot) {
     return minify(content)
 }
 
-function minifyCommonFiles() {
+function minifyCommonFiles(imports) {
     const files = [];
     const dir = "common"
 
@@ -31,8 +46,13 @@ function minifyCommonFiles() {
         const filepath = path.resolve(dir, filename);
         const stat = fs.statSync(filepath);
         const isFile = stat.isFile();
-
-        if (isFile) files.push({ filepath });
+        if (isFile) {
+            const fileNameWithoutExtension = filename.split(".")[0]
+            if (imports.includes(fileNameWithoutExtension)) {
+                console.log(fileNameWithoutExtension)
+                files.push({ filepath });
+            }
+        }
     });
 
     out = []
@@ -83,8 +103,10 @@ if (process.argv.length < 3) {
 bot = process.argv[2]
 
 // Minify and merge files.
+imports = parseImports(bot)
+console.log(imports)
 minifiedBotFile = minifyBotFile(bot)
-minifiedCommonFiles = minifyCommonFiles()
+minifiedCommonFiles = minifyCommonFiles(imports)
 minifiedFiles = minifiedBotFile.concat(minifiedCommonFiles)
 
 // Additional checks.
