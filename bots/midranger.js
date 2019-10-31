@@ -2,14 +2,20 @@ init = function() {
 
     DODGE_ARTILLERY = 1
 
-    FORWARD_MINE_ATTACKS = 1;
-    SS_BACKWARD_MINES = 0;
-    SS_BACKWARD_LEFT = 1;
+    FORWARD_MINE_ATTACKS = 0
+    SS_BACKWARD_MINES = 0
+    SS_BACKWARD_LEFT = 1
 
-    SS_REFLECT_TURN = 0;
+    SS_REFLECT_TURN = 0
+    REFLECT_ALLOWED_FROM_TURN = 1
 
+    REPAIR_AVAILABLE = 1
+    REPAIR_X = 0
+    REPAIR_Y = 0
 
-    REFLECT_ALLOWED_FROM_TURN = 4;
+    currentlyRetreatingToRepair = 0
+    waitingForFriendsToRepair = 0
+
 
     DODGE_COOLDOWN = 2;
     DODGE_PENALTY_DIST_7 = 3
@@ -25,10 +31,10 @@ init = function() {
     DODGE_PENALTY_DIST_2_CARDINALITY_EXTRA = 4 // melee charge cardinality in addition to laser!
     DODGE_PENALTY_EDGE_OF_MAP = 1
 
-    countForwardMineAttacks = 0;
-    countBackwardMineAttacks = 0;
-    forwardMinesState = 0;
-    lastMineLayTurn = -1000;
+    countForwardMineAttacks = 0
+    countBackwardMineAttacks = 0
+    forwardMinesState = 0
+    lastMineLayTurn = -1000
 
     commonInitProcedures()
     initializeHeatmap()
@@ -36,10 +42,14 @@ init = function() {
 
 update = function () {
     commonStateUpdates()
+
+
     updateHeatmap()
+
+    debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
+    maybeRepair()
     specialActions()
     normalActions()
-
 }
 
 specialActions = function() {
@@ -49,8 +59,8 @@ specialActions = function() {
     if (FORWARD_MINE_ATTACKS && probablyHasLandMines()) {
         // Start/continue laying forward mines if we don't see enemies
         if (d > 5 && forwardMinesState == 0 && countForwardMineAttacks < FORWARD_MINE_ATTACKS) {
-            forwardMinesState += 1;
-            countForwardMineAttacks += 1;
+            forwardMinesState += 1
+            countForwardMineAttacks += 1
         }
 
         if (coordinatedTeleportTriggered()) {
@@ -59,7 +69,7 @@ specialActions = function() {
         }
 
         if (forwardMinesState == 1) {
-            if (reflectAllowed()) reflect();
+            if (d <= 5 && reflectAllowed()) reflect()
             if (canTeleport()) {
                 if (d < 3) {
                     forwardMinesState = 2
@@ -132,13 +142,98 @@ tryDefensiveTeleport = function() {
     }
 }
 
+inDanger = function() {
+    if (currLife < 600 && isReflecting()) return true
+    if (currLife < 900 && !isReflecting()) return true
+    return false
+}
+
+maybeRepair = function() {
+    if (REPAIR_AVAILABLE) {
+        distToRepair = getDistanceTo(REPAIR_X, REPAIR_Y)
+        if (inDanger() && distToRepair > 5) {
+            // Triggering retreat to repair
+            currentlyRetreatingToRepair = true
+        }
+        if (distToRepair <= 3 && currDistToClosestBot <= 5) {
+            // Enemies followed us to repair, fight them now
+            currentlyRetreatingToRepair = false
+            waitingForFriendsToRepair = false
+        }
+        if (currentlyRetreatingToRepair) {
+            if (distToRepair > 1) {
+                // Retreating towards repair
+                maybeDodge()
+                if (canCloak() && !isCloaked()) {
+                    cloak()
+                }
+                // Try to move towards the 'corner' of repair-man
+                if (x > REPAIR_X+1) tryMoveTo(x-1, y)
+                if (x < REPAIR_X-1) tryMoveTo(x+1, y)
+                if (y > REPAIR_Y+1) tryMoveTo(x, y-1)
+                if (y < REPAIR_Y-1) tryMoveTo(x, y+1)
+                // Try to move next to the repair-man
+                if (x > REPAIR_X) tryMoveTo(x-1, y)
+                if (x < REPAIR_X) tryMoveTo(x+1, y)
+                if (y > REPAIR_Y) tryMoveTo(x, y-1)
+                if (y < REPAIR_Y) tryMoveTo(x, y+1)
+                // Fallback
+                if (willMissilesHit()) fireMissiles()
+                if (canLayMine()) layMine()
+                move()
+            } else {
+                // We have reached a tile next to repair-man's tile
+                if (!getEntityAt(REPAIR_X, REPAIR_Y)) {
+                    // Repair-man is dead
+                    REPAIR_AVAILABLE = 0
+                    currentlyRetreatingToRepair = false
+                } else if (currLife < 2000) {
+                    // Wait until completely healed
+                    if (canActivateSensors()) activateSensors()
+                    if (canLayMine()) layMine()
+                    move(x, y)
+                } else {
+                    // We are completely healed
+                    currentlyRetreatingToRepair = false
+                    lowestHealthNearbyFriendlyBot = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
+                    if (exists(lowestHealthNearbyFriendlyBot) && getLife(lowestHealthNearbyFriendlyBot) < 2000) {
+                        waitingForFriendsToRepair = true
+                    }
+                }
+            }
+        }
+        if (waitingForFriendsToRepair) {
+            lowestHealthNearbyFriendlyBot = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
+            if (exists(lowestHealthNearbyFriendlyBot) && getLife(lowestHealthNearbyFriendlyBot) < 2000) {
+                // Still have to wait for some friends to repair. Move out of the way.
+                if (x == REPAIR_X+1 || x == REPAIR_X+2) {
+                    tryMoveTo(x-1, y)
+                    if (y < yCPU) tryMoveTo(x, y+1)
+                    else tryMoveTo(y-1)
+                    tryMoveTo(x+1, y)
+                }
+                if (y < yCPU-1) tryMoveTo(x, y+1)
+                if (willMissilesHit()) fireMissiles()
+                move(x, y) // wait
+            } else {
+                // Everyone is repaired, let's fight!
+                waitingForFriendsToRepair = false
+            }
+        }
+    }
+}
 
 normalActions = function() {
 
-    // If we don't see anything, then move towards the CPU
     closestEnemy = findEntity(ENEMY, ANYTHING, SORT_BY_DISTANCE, SORT_ASCENDING);
+
+
+
+    // If we don't see anything, then move towards the CPU
     if (!exists(closestEnemy)) {
-        moveTo(arenaWidth-2, (arenaHeight-1)/2);
+        tryMoveTo(x+1, y)
+        if (y > yCPU) tryMoveTo(x, y-1)
+        else tryMoveTo(x, y+1)
     }
 
     // If we can see at least one enemy bot somewhere
@@ -183,23 +278,22 @@ normalActions = function() {
             }
         }
 
-        // If we took damage last turn, try to evade somehow (-50 because splash damage is ok)
-        if (isLocationHot(x, y)) {
-            // Cooldown for evade so we dont waste all our turns evading. This is more crucial to midranger compared to outranger,
-            // because midranger will end up in missile vs missile/laser fights, whereas outranger can actually outrange opponents.
-            if (turn >= lastDodgeTurn+DODGE_COOLDOWN) {
-                lastDodgeTurn = turn
-                probablyDodge()
+        maybeDodge()
+
+        if (!REPAIR_AVAILABLE) {
+            // Alternate between reflect and cloak, with a priority on reflecting.
+            if (!isCloaked() && !isReflecting() && reflectAllowed()) {
+                reflect()
             }
+            if (!isReflecting() && !canReflect() && canCloak() && !isCloaked()) {
+                cloak()
+            }
+        } else {
+            // When repair is available, we do NOT want to alternate between reflect and cloak.
+            // Instead, we want to use reflect when needed, and spare cloak for escaping.
+            if (currDistToClosestBot <= 5 && reflectAllowed()) reflect()
         }
 
-        // Alternate between reflect and cloak, with a priority on reflecting.
-        if (reflectAllowed()) {
-            reflect()
-        }
-        if (!isReflecting() && !canReflect() && canCloak()) {
-            cloak()
-        }
 
         // Try to fire missiles
         if (willMissilesHit()) {
@@ -223,5 +317,16 @@ normalActions = function() {
     if (willMissilesHit()) {
         fireMissiles();
     }
-    pursue(closestEnemy); // chip of cpu
+    pursue(closestEnemy); // chip or cpu
+}
+
+maybeDodge = function() {
+    if (isLocationHot(x, y)) {
+        // Cooldown for evade so we dont waste all our turns evading. This is more crucial to midranger compared to outranger,
+        // because midranger will end up in missile vs missile/laser fights, whereas outranger can actually outrange opponents.
+        if (turn >= lastDodgeTurn+DODGE_COOLDOWN) {
+            lastDodgeTurn = turn
+            probablyDodge()
+        }
+    }
 }
