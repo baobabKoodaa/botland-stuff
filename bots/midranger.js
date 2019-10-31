@@ -1,3 +1,8 @@
+//!import dodging
+//!import heatmap
+//!import state
+//!import utils
+
 init = function() {
 
     DODGE_ARTILLERY = 1
@@ -46,7 +51,7 @@ update = function () {
 
     updateHeatmap()
 
-    debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
+    //debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
     maybeRepair()
     specialActions()
     normalActions()
@@ -258,7 +263,7 @@ normalActions = function() {
             }
 
         }
-        // Maybe lure enemy into mine that we are standing on //TODO break cardinality here or not?
+        // Maybe lure enemy into mine that we are standing on //TODO break cardinality here or not? // TODO should we maybeDodge before mineLaying and mineLuring?
         if (currDistToClosestBot <= 1) {
 
             if (probablyStandingOnMine()) {
@@ -309,8 +314,7 @@ normalActions = function() {
             }
         }
 
-        // Fallback to pursuing closest bot
-        pursue(closestBot);
+        moveCloserToEnemiesWithoutSteppingOnHot()
     }
 
     // If we can see enemy chip or cpu, but no bot
@@ -318,6 +322,19 @@ normalActions = function() {
         fireMissiles();
     }
     pursue(closestEnemy); // chip or cpu
+}
+
+moveCloserToEnemiesWithoutSteppingOnHot = function() {
+    frHelper(x, y+1)
+    frHelper(x, y-1)
+    frHelper(x-1, y)
+    frHelper(x+1, y)
+}
+
+frHelper = function(cx, cy) {
+    if (distToClosestEnemyBot(cx, cy) < distToClosestEnemyBot(x, y) && !isLocationHot(cx, cy)) {
+        moveTo(cx, cy)
+    }
 }
 
 maybeDodge = function() {
