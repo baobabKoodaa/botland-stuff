@@ -1,3 +1,6 @@
+//!import state
+//!import utils
+
 init = function() {
     ALTERNATE_REFLECT_CLOAK_ALLOWED_FROM_TURN = 5
     REFLECT_ALLOWED_FROM_TURN = 5

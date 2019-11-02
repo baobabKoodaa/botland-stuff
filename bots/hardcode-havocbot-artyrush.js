@@ -1,3 +1,6 @@
+//!import state
+//!import utils
+
 init = function() {
     commonInitProcedures()
 }
@@ -12,7 +15,13 @@ update = function() {
         cloak()
     }
     if (turn <= 13) moveTo(x+1, y)
-    if (turn == 14) teleport(x+5, y)
+    if (turn == 14) {
+        tryTeleport(x+5, y)
+        tryTeleport(x+4, y+1)
+        tryTeleport(x+4, y-1)
+        tryTeleport(x+3, y+2)
+        tryTeleport(x+3, y-2)
+    }
 
     cpu = findEntity(ENEMY, CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     if (exists(cpu) && willArtilleryHit(cpu)) {
