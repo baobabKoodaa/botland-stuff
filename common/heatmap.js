@@ -32,15 +32,15 @@ updateHeatmapLocation = function(cx, cy, heatAmount) {
         // Tile is already in heatmap
         if (turn > array2[tileIndex]) {
             // Clear out any expired residual heat.
-            array2[tileIndex+3] = 0;
+            array2[tileIndex+3] = 0
         }
         // Add new heat.
-        oldHeat = array2[tileIndex+3];
-        newHeat = oldHeat + heatAmount;
-        array2[tileIndex+3] = newHeat;
+        oldHeat = array2[tileIndex+3]
+        newHeat = oldHeat + heatAmount
+        array2[tileIndex+3] = newHeat
         // Update keep-alive
-        array2[tileIndex] = turn + HEAT_LONGEVITY;
-        return;
+        array2[tileIndex] = turn + HEAT_LONGEVITY
+        return
     }
 
     // Add tile to next free slot.
@@ -61,6 +61,7 @@ updateHeatmapLocation = function(cx, cy, heatAmount) {
 }
 
 getLocationHeat = function(cx, cy) {
+    array2 = sharedB
     tileIndex = findTileIndexFromHeatmap(cx, cy);
     if (tileIndex < 1) return 0; // tile not found in heatmap
     if (array2[tileIndex] < turn) return 0; // tile found but heat expired some turns ago
