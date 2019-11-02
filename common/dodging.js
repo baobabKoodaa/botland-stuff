@@ -34,8 +34,7 @@ scoreDodgeLocation = function(cx, cy) {
     s -= 1*friendlyBotsWithinDist(cx, cy);
 
     if (DODGE_ARTILLERY) {
-        // Use heatMap to score the potential of taking damage in location.
-        s -= 0.05*getLocationHeat(cx, cy);
+        s -= 1*getLocationHeat(cx, cy);
     }
 
     return s;
@@ -86,13 +85,13 @@ probablyDodge = function() {
     scoreRight = scoreDodgeLocation(x+1, y) - actionCost;
     scoreCurrent = scoreDodgeLocation(x, y); // No actionCost here, because if we stay, we get to act.
 
-    //debugLog('T' + turn + 'u(' + scoreUp + ') d(' + scoreDown + ') l(' + scoreLeft + ') r(' + scoreRight + ') c(' + scoreCurrent + ')');
+    debugLog('T' + turn + 'u(' + scoreUp + ') d(' + scoreDown + ') l(' + scoreLeft + ') r(' + scoreRight + ') c(' + scoreCurrent + ')');
 
     // Choose best score, break ties with a directional preference: vertical > left > right
-    scoreBest = max(scoreCurrent, scoreUp, scoreDown, scoreLeft, scoreUp);
-    if (scoreUp == scoreBest) move('up');
-    if (scoreDown == scoreBest) move('down');
-    if (scoreLeft == scoreBest) move('left');
-    if (scoreRight == scoreBest) move('right');
+    scoreBest = max(scoreCurrent, scoreUp, scoreDown, scoreLeft, scoreRight)
+    if (scoreUp == scoreBest) move('up')
+    if (scoreDown == scoreBest) move('down')
+    if (scoreLeft == scoreBest) move('left')
+    if (scoreRight == scoreBest) move('right')
     // when scoreCurrent is best we fall through
 }
