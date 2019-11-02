@@ -1,3 +1,12 @@
+thisShouldNeverExecute = function() {
+    // Flag a bug with taunt crying emoji.
+    taunt('CRYING')
+}
+
+wait = function() {
+    taunt('THUMBS_UP')
+}
+
 moveTowards = function(cx, cy) {
     moveTo(cx, cy)
 }
@@ -129,6 +138,7 @@ hasMeleeCardinality = function(cx, cy, ex, ey) {
 
 
 // Returns 1 if we can fire lasers at any enemy bot from given coordinates.
+/*
 canFireLasers = function(cx, cy) {
     array1 = findEntities(ENEMY, BOT, false)
     for (i = 0; i < size(array1); i++) {
@@ -143,7 +153,7 @@ canFireLasers = function(cx, cy) {
     }
     return 0
 }
-
+*/
 
 
 

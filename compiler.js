@@ -49,7 +49,6 @@ function minifyCommonFiles(imports) {
         if (isFile) {
             const fileNameWithoutExtension = filename.split(".")[0]
             if (imports.includes(fileNameWithoutExtension)) {
-                console.log(fileNameWithoutExtension)
                 files.push({ filepath });
             }
         }
@@ -104,7 +103,6 @@ bot = process.argv[2]
 
 // Minify and merge files.
 imports = parseImports(bot)
-console.log(imports)
 minifiedBotFile = minifyBotFile(bot)
 minifiedCommonFiles = minifyCommonFiles(imports)
 minifiedFiles = minifiedBotFile.concat(minifiedCommonFiles)
