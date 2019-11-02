@@ -9,12 +9,12 @@ init = function() {
 
     FORWARD_MINE_ATTACKS = 0
     SS_BACKWARD_MINES = 0
-    SS_BACKWARD_LEFT = 1
+    SS_BACKWARD_LEFT = 2
 
     SS_REFLECT_TURN = 0
     REFLECT_ALLOWED_FROM_TURN = 1
 
-    REPAIR_AVAILABLE = 1
+    REPAIR_AVAILABLE = 0
     REPAIR_X = 0
     REPAIR_Y = 0
 
@@ -51,7 +51,7 @@ update = function () {
 
     updateHeatmap()
 
-    //debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
+    debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
     maybeRepair()
     specialActions()
     normalActions()
@@ -160,7 +160,7 @@ maybeRepair = function() {
             // Triggering retreat to repair
             currentlyRetreatingToRepair = true
         }
-        if (distToRepair <= 3 && currDistToClosestBot <= 5) {
+        if (distToRepair <= 5 && currDistToClosestBot <= 5) { // TODO replace this with coordinated shared variable
             // Enemies followed us to repair, fight them now
             currentlyRetreatingToRepair = false
             waitingForFriendsToRepair = false
@@ -211,8 +211,13 @@ maybeRepair = function() {
             lowestHealthNearbyFriendlyBot = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
             if (exists(lowestHealthNearbyFriendlyBot) && getLife(lowestHealthNearbyFriendlyBot) < 2000) {
                 // Still have to wait for some friends to repair. Move out of the way.
-                if (x == REPAIR_X+1 || x == REPAIR_X+2) {
+                if (y != REPAIR_Y && (x == REPAIR_X+1 || x == REPAIR_X+2)) {
                     tryMoveTo(x-1, y)
+                    if (y < yCPU) tryMoveTo(x, y+1)
+                    else tryMoveTo(y-1)
+                    tryMoveTo(x+1, y)
+                }
+                if (y == REPAIR_Y) {
                     if (y < yCPU) tryMoveTo(x, y+1)
                     else tryMoveTo(y-1)
                     tryMoveTo(x+1, y)
@@ -231,8 +236,6 @@ maybeRepair = function() {
 normalActions = function() {
 
     closestEnemy = findEntity(ENEMY, ANYTHING, SORT_BY_DISTANCE, SORT_ASCENDING);
-
-
 
     // If we don't see anything, then move towards the CPU
     if (!exists(closestEnemy)) {
@@ -318,6 +321,7 @@ normalActions = function() {
     }
 
     // If we can see enemy chip or cpu, but no bot
+    maybeDodge()
     if (willMissilesHit()) {
         fireMissiles();
     }
