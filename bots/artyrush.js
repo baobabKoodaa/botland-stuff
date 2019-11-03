@@ -14,7 +14,7 @@ update = function() {
     if (turn == 1) teleport(x+5, y)
 
     if (turn >= ALTERNATE_REFLECT_CLOAK_ALLOWED_FROM_TURN) {
-        if (reflectAllowed() && !isCloaked() && !isReflecting() && countEnemyBotsWithinDist(x, y, 5, 5) >= 1) reflect()
+        if (reflectAllowed() && !isCloaked() && !isReflecting() && countEnemyBotsWithinDist(x, y, 1, 5) >= 1) reflect()
         if (canCloak() && !isCloaked() && !isReflecting()) cloak()
     }
 

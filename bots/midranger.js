@@ -258,7 +258,7 @@ normalActions = function() {
 
         // Maybe lay mine
         if (canLayMine() && inMeleeOrEnemyEnclosing() && currLife > 550 && x != 0 && y != 0 && x != arenaWidth-1 && y != arenaHeight-1) {
-            otherFriendlies = friendlyBotsWithinDist(xe, ye, 2, 2);
+            otherFriendlies = friendlyBotsWithinDist(xe, ye, 1, 2);
             if (otherFriendlies == 0) {
                 // Prevent case where 2 midrangers both lay mines and both escape from the same opponent, essentially wasting some actions.
                 lastMineLayTurn = turn;
