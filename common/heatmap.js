@@ -77,12 +77,7 @@ updateHeatmap = function() {
         return
     }
     array2 = sharedB
-    damageTaken = prevLife - currLife
-    if (damageTaken < DMG_RESPONSE_THRESHOLD) {
-        // If we are healed or we take splash damage act as if damage is 0.
-        damageTaken = 0
-    }
-    heatAmount = HEAT_SIT + damageTaken
+    heatAmount = HEAT_SIT
     updateHeatmapLocation(x, y, heatAmount)
     sharedB = array2
 }

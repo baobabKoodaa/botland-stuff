@@ -10,7 +10,6 @@ commonInitProcedures = function() {
 
     HEAT_LONGEVITY = 4
     HEAT_SIT = 30
-    DMG_RESPONSE_THRESHOLD = 10000//61
     HOTNESS_THRESHOLD = 90
 
     xCPU = arenaWidth-2;
