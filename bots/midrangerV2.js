@@ -12,6 +12,8 @@ init = function() {
     DODGE_ARTILLERY = 1
     FIRING_DISTANCE = 4
 
+
+
     DODGE_COOLDOWN = 3;
     DODGE_PENALTY_DIST_7 = 3
     DODGE_PENALTY_DIST_6 = 3
@@ -38,6 +40,7 @@ init = function() {
 
 update = function () {
     commonStateUpdates()
+
     updateHeatmap()
 
     //debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
@@ -57,8 +60,8 @@ coordinatedRetreatAndRepair = function() {
     if (currLife < 1900) {
         askAlliesToWaitForUsToRepair()
     }
-    if (x >= 2) {
-        if (x >= 4) {
+    if (x >= startX) {
+        if (x >= startX+2) {
             tryTeleport(x-5, y)
             tryTeleport(x-4, y-1)
             tryTeleport(x-4, y+1)
@@ -81,6 +84,7 @@ coordinatedRetreatAndRepair = function() {
         goRepairIfNeeded(closestAlly)
         lowestLifeFriendly = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
         goRepairIfNeeded(lowestLifeFriendly)
+
         wait() // If we are blocked from moving to ally in y-direction, just wait. We don't want to ruin our formation by moving in x-direction.
     }
 }
@@ -337,6 +341,8 @@ moveCloserOrSomething = function(ex, ey) {
         fireMissiles()
     }
 
+    // We can't move closer, we can't fire. What to do?
+    if (willRepair()) repair()
     wait() // ???
 }
 
