@@ -55,7 +55,13 @@ coordinatedRetreatAndRepair = function() {
         askAlliesToWaitForUsToRepair()
     }
     if (x >= 2) {
-        if (x >= 4) tryDefensiveTeleport()
+        if (x >= 4) {
+            tryTeleport(x-5, y)
+            tryTeleport(x-4, y-1)
+            tryTeleport(x-4, y+1)
+            tryTeleport(x-3, y-2)
+            tryTeleport(x-3, y+2)
+        }
         tryMoveTo(x-1, y)
         tryMoveTo(x-2, y)
     }
@@ -85,12 +91,6 @@ longTimeSinceLastRepair = function() {
     return sharedD < turn-10
 }
 
-
-
-tryMoveToIfSafe = function(cx, cy) {
-    if (!isLocationHot(cx, cy) && countEnemyBotsWithMeleeCardinality(cx, cy) == 0) tryMoveTo(cx, cy)
-}
-
 assignNewSharedTarget = function() {
     // TODO scoring jossa otetaan järkevästi huomioon sekä etäisyys että helat (etäisyydessä _ei vain meihin etäisyys vaan kaikkiin friendlyihin_!)
     // TODO miten sais targetoitua chippejä huomioiden että getEntityAt ei osaa tunnistaa chippiä
@@ -106,32 +106,12 @@ assignNewSharedTarget = function() {
     }
 }
 
-removeSharedTarget = function() {
-    sharedE = -1
-}
-
-moveCloserOrSomething = function(ex, ey) {
-    // Try to move closer, with preference and safety considerations.
-    xDiff = abs(x - ex)
-    yDiff = abs(y - ey)
-    if (xDiff > yDiff) {
-        if (x < ex) tryMoveToIfSafe(x+1, y)
-        else tryMoveToIfSafe(x-1, y)
-    } else {
-        if (y < ey) tryMoveToIfSafe(x, y+1)
-        else tryMoveToIfSafe(x, y-1)
-    }
-    if (x < ex) tryMoveToIfSafe(x+1, y)
-    if (x > ex) tryMoveToIfSafe(x-1, y)
-    if (y < ey) tryMoveToIfSafe(x, y+1)
-    if (y > ey) tryMoveToIfSafe(x, y-1)
-    // Fallback if we can't move closer: dodge if needed, otherwise fire on something
-    maybeDodge()
-    maybeFireMissilesOnSomething()
-}
-
 weHaveSharedTarget = function() {
     return sharedE >= 0
+}
+
+removeSharedTarget = function() {
+    sharedE = -1
 }
 
 // TODO shield instead of repair?
@@ -159,23 +139,21 @@ coordinatedAttackWithDodging = function() {
     sharedC = MODE_ATTACK
 
     maybeCoordinateRetreat()
+    if (!weHaveSharedTarget()) {
+        assignNewSharedTarget()
+    }
     if (countEnemyBotsWithMeleeCardinality(x, y) >= 1) {
-        // Try to step out of melee cardinality.
+        // Try to step out of melee cardinality, fallback to offensive teleport
         tryMoveToIfSafe(x, y+1)
         tryMoveToIfSafe(x, y-1)
         tryMoveToIfSafe(x-1, y)
         tryMoveToIfSafe(x+1, y)
-        // Try to teleport towards home corner (but do not call for a coordinated retreat).
-        tryDefensiveTeleport() // TODO optimize teleport location to maintain firing distance to shared target if possible
-    }
-    if (!weHaveSharedTarget()) {
-        assignNewSharedTarget()
+        tryOffensiveTeleport()
     }
     if (weHaveSharedTarget()) {
         // We have shared target
         ex = floor(sharedE / 100)
         ey = sharedE % 100
-        debugLog("turn", turn, "target", ex, ey)
         // Are we too far to see the target tile?
         if (getDistanceTo(ex, ey) > 5) {
             moveCloserOrSomething(ex, ey)
@@ -189,11 +167,11 @@ coordinatedAttackWithDodging = function() {
             ey = sharedE % 100
             sharedTargetEntity = getEntityAt(ex, ey)
             maybeDodge()
-            // The target may be at distance 5 and our missile range is usually 4
-            if (!willMissilesHit(sharedTargetEntity)) {
+            if (willMissilesHit(sharedTargetEntity)) fireMissiles(sharedTargetEntity)
+            else {
+                // The target may be at distance 5 and our missile range is usually 4
                 moveCloserOrSomething(ex, ey)
             }
-            fireMissiles(sharedTargetEntity)
         }
     }
 
@@ -211,44 +189,85 @@ coordinatedAttackWithDodging = function() {
     else tryMoveTo(x, y+1)
 }
 
-maybeFireMissilesOnSomething = function() {
+moveCloserOrSomething = function(ex, ey) {
+
+    // Try to move closer, with preference and safety considerations.
+    xDiff = abs(x - ex)
+    yDiff = abs(y - ey)
+    if (xDiff > yDiff) {
+        if (x < ex) tryMoveToIfSafe(x+1, y)
+        else tryMoveToIfSafe(x-1, y)
+    } else {
+        if (y < ey) tryMoveToIfSafe(x, y+1)
+        else tryMoveToIfSafe(x, y-1)
+    }
+    if (x < ex) tryMoveToIfSafe(x+1, y)
+    if (x > ex) tryMoveToIfSafe(x-1, y)
+    if (y < ey) tryMoveToIfSafe(x, y+1)
+    if (y > ey) tryMoveToIfSafe(x, y-1)
+
+    // Fallback if we can't move closer: dodge if needed, otherwise fire on something
+    maybeDodge()
     if (willMissilesHit()) {
         // Hit lowest health enemy in range
         enemies = findEntitiesInRange(ENEMY, BOT, false, 4);
         lowestHealthEnemy = filterEntities(enemies, [SORT_BY_LIFE], [SORT_ASCENDING]);
-        if (willMissilesHit(lowestHealthEnemy)) {
+        if (exists(lowestHealthEnemy) && willMissilesHit(lowestHealthEnemy)) {
             fireMissiles(lowestHealthEnemy)
         }
-        // If for some reason unable to fire missiles on lowest health enemy, fire missile on something else
-        if (willMissilesHit()) {
-            fireMissiles()
-        }
+        fireMissiles()
     }
 }
 
-tryDefensiveTeleport = function() {
-    if(!canTeleport()) return
-    if (y <= arenaHeight/2) {
-        tryTeleport(x-3, y-1)
-        tryTeleport(x-4, y)
-        tryTeleport(x-2, y-2)
-        tryTeleport(x-3, y)
-        tryTeleport(x-1, y-3)
-        tryTeleport(x, y-4)
-    } else {
-        tryTeleport(x-3, y+1)
-        tryTeleport(x-4, y)
-        tryTeleport(x-2, y+2)
-        tryTeleport(x-3, y)
-        tryTeleport(x-1, y+3)
-        tryTeleport(x, y+4)
-    }
+isSafe = function(cx, cy) {
+    return !isLocationHot(cx, cy) && countEnemyBotsWithMeleeCardinality(cx, cy) == 0
+}
+
+tryMoveToIfSafe = function(cx, cy) {
+    if (isSafe(cx, cy)) tryMoveTo(cx, cy)
+}
+
+tryTeleportIfSafe = function(cx, cy) {
+    // Micro-optimizations to prevent unnecessary heavy calculations
+    if (outOfBounds(cx, cy)) return
+    if (!getDistanceTo(cx, cy) > 5) return
+    if (exists(getEntityAt(cx, cy))) return
+    // The actual tryTeleportIfSafe functionality
+    if (isSafe(cx, cy)) tryTeleport(cx, cy)
+}
+
+tryOffensiveTeleport = function() {
+    if (!canTeleport()) return
+    if (!weHaveSharedTarget()) thisShouldNeverExecute()
+    // Try to maintain firing distance, avoid stepping on hot locations, minimize number of enemies in range
+    ex = floor(sharedE / 100)
+    ey = sharedE % 100
+    // Preferred range4 locations
+    tryTeleportIfSafe(ex-3, ey-1)
+    tryTeleportIfSafe(ex-3, ey+1)
+    tryTeleportIfSafe(ex-4, ey)
+    // Preferred range3 locations
+    tryTeleportIfSafe(ex-2, ey-1)
+    tryTeleportIfSafe(ex-2, ey+1)
+    tryTeleportIfSafe(ex-3, ey)
+    // Fallback range4 locations
+    tryTeleportIfSafe(ex-2, ey-2)
+    tryTeleportIfSafe(ex-2, ey+2)
+    tryTeleportIfSafe(ex-1, ey+3)
+    tryTeleportIfSafe(ex-1, ey-3)
+    // Fallback range3 locations
+    tryTeleportIfSafe(ex-1, ey-2)
+    tryTeleportIfSafe(ex-1, ey+2)
 }
 
 maybeDodge = function() {
     if (turn >= lastMoveTurn + DODGE_COOLDOWN) {
         // Cooldown so we don't waste all our turns evading. For example, cooldown 3 prevents normal-haste artillery from ever landing a hit on us.
         // This is more crucial to midranger compared to outranger, because midranger will end up in missile vs missile/laser fights, whereas outranger can actually outrange opponents.
+        if (x >= xCPU-2 && lastDmgTakenTurn < turn-5) {
+            // Reduce unnecessary computation and unnecessary dodging actions when we are killing the CPU.
+            return
+        }
         if (isLocationHot(x, y)) {
             probablyDodge()
         }
