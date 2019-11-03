@@ -11,7 +11,7 @@ init = function() {
 
     DODGE_ARTILLERY = 1
 
-    DODGE_COOLDOWN = 2;
+    DODGE_COOLDOWN = 3;
     DODGE_PENALTY_DIST_7 = 3
     DODGE_PENALTY_DIST_6 = 3
     DODGE_PENALTY_DIST_5 = 3
@@ -50,7 +50,8 @@ update = function () {
 
 coordinatedRetreatAndRepair = function() {
     sharedC = MODE_RETREAT_REPAIR
-    if (currLife < 2000) {
+    removeSharedTarget()
+    if (currLife < 1900) {
         askAlliesToWaitForUsToRepair()
     }
     if (x >= 2) {
@@ -62,17 +63,17 @@ coordinatedRetreatAndRepair = function() {
     if (exists(closestEnemy)) {
         coordinatedAttackWithDodging()
     }
-    if (currLife < 2000) {
-        repair()
-    }
-    if (!alliesNeedRepairs()) {
+    if (!someoneNeedsRepair()) {
         coordinatedAttackWithDodging()
+    } else if (currLife < 2000) {
+        repair()
     } else {
+        // TODO repair allies too
         wait()
     }
 }
 
-alliesNeedRepairs = function() {
+someoneNeedsRepair = function() {
     return (sharedD >= turn-1)
 }
 
@@ -87,19 +88,25 @@ longTimeSinceLastRepair = function() {
 
 
 tryMoveToIfSafe = function(cx, cy) {
-    if (!isLocationHot(cx, cy) && countEnemyBotsWithinDist(cx, cy, 1, 1) == 0) tryMoveTo(cx, cy)
+    if (!isLocationHot(cx, cy) && countEnemyBotsWithMeleeCardinality(cx, cy) == 0) tryMoveTo(cx, cy)
 }
 
 assignNewSharedTarget = function() {
-    lowestHealthEnemyBot = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
+    // TODO scoring jossa otetaan järkevästi huomioon sekä etäisyys että helat (etäisyydessä _ei vain meihin etäisyys vaan kaikkiin friendlyihin_!)
+    lowestHealthEnemy = findEntity(ENEMY, ANYTHING, SORT_BY_LIFE, SORT_ASCENDING)
     // TODO sometimes lowest health target has escaped behind a wall of enemies. in that case we want to ditch it.
-    if (exists(lowestHealthEnemyBot)) {
-        ex = getX(lowestHealthEnemyBot)
-        ey = getY(lowestHealthEnemyBot)
+    // TODO scoring huomioi inferred reflectivity
+    if (exists(lowestHealthEnemy)) {
+        ex = getX(lowestHealthEnemy)
+        ey = getY(lowestHealthEnemy)
         sharedE = 100*ex + ey
     } else {
-        sharedE = -1
+        removeSharedTarget()
     }
+}
+
+removeSharedTarget = function() {
+    sharedE = -1
 }
 
 moveCloserOrSomething = function(ex, ey) {
@@ -126,8 +133,24 @@ weHaveSharedTarget = function() {
     return sharedE >= 0
 }
 
-noEnemiesCloseToHome = function() {
+// TODO shield instead of repair?
 
+maybeCoordinateRetreat = function() {
+    if (shouldWeCoordinateRetreat()) {
+        coordinatedRetreatAndRepair()
+    }
+}
+
+shouldWeCoordinateRetreat = function() {
+    if (!willRepair()) return false // TODO make this work also in case where we have DEDICATED repairers
+    if (!longTimeSinceLastRepair()) return false // Prevent whipsaw
+    safetyThreshold = 400 // If we predict we'll have less life than this next turn, then we should teleport away now.
+    predictedLife = currLife - dmgTaken // We predict we'll take same amount of damage here next turn
+    if (countEnemyBotsWithMeleeCardinality(x, y) >= 1) predictedLife -= 300 // Remember that we also have a step-out-of-danger move even if we don't coordinate a retreat.
+    // TODO consider enemy reflectors in some way?
+    // TODO consider our own reflectors in some way?
+    // TODO if enemy is about to die, our safetyThreshold should be less! (take a risk to finish off a dying enemy)
+    return predictedLife < safetyThreshold
 }
 
 coordinatedAttackWithDodging = function() {
@@ -136,13 +159,15 @@ coordinatedAttackWithDodging = function() {
 
     debugLog(currLife, sharedE, turn)
 
-    if (currLife < 700 && longTimeSinceLastRepair()) {
-        // Call for a coordinated retreat when we are in danger of dying AND there hasn't been a retreat recently (to prevent whipsaw).
-        coordinatedRetreatAndRepair()
-    }
-    if (currDistToClosestBot == 1 && canTeleport()) {
-        // In danger of being melee'd. Try to teleport towards home corner (but do not call for a coordinated retreat).
-        tryDefensiveTeleport()
+    maybeCoordinateRetreat()
+    if (countEnemyBotsWithMeleeCardinality(x, y) >= 1) {
+        // Try to step out of melee cardinality.
+        tryMoveToIfSafe(x, y+1)
+        tryMoveToIfSafe(x, y-1)
+        tryMoveToIfSafe(x-1, y)
+        tryMoveToIfSafe(x+1, y)
+        // Try to teleport towards home corner (but do not call for a coordinated retreat).
+        tryDefensiveTeleport() // TODO optimize teleport location to maintain firing distance to shared target if possible
     }
     if (!weHaveSharedTarget()) {
         assignNewSharedTarget()
@@ -202,6 +227,7 @@ maybeFireMissilesOnSomething = function() {
 }
 
 tryDefensiveTeleport = function() {
+    if(!canTeleport()) return
     if (y <= arenaHeight/2) {
         tryTeleport(x-3, y-1)
         tryTeleport(x-4, y)

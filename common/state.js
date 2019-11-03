@@ -9,7 +9,7 @@ commonInitProcedures = function() {
     startY = y
 
     HEAT_LONGEVITY = 4
-    HEAT_SIT = 30
+    HEAT_SIT = 90
     HOTNESS_THRESHOLD = 90
 
     xCPU = arenaWidth-2;
@@ -20,6 +20,7 @@ commonStateUpdates = function() {
     turn += 1;
     prevLife = currLife;
     currLife = life;
+    dmgTaken = max(0, prevLife-currLife)
     if (canLayMine()) hasBeenAbleToLayMine = true
     prevDistToClosestBot = currDistToClosestBot;
     currDistToClosestBot = distToClosestEnemyBot(x, y);

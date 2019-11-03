@@ -22,7 +22,7 @@ init = function() {
     waitingForFriendsToRepair = 0
 
 
-    DODGE_COOLDOWN = 2;
+    DODGE_COOLDOWN = 3;
     DODGE_PENALTY_DIST_7 = 3
     DODGE_PENALTY_DIST_6 = 3
     DODGE_PENALTY_DIST_5 = 3

@@ -1,10 +1,15 @@
+//!import dodging
+//!import heatmap
+//!import state
+//!import utils
+
 init = function() {
     DODGE_ARTILLERY = 1
     REFLECT_ALLOWED_FROM_TURN = 1
     DESTROY_CHIPS_AT_START = 1
 
 
-    DODGE_COOLDOWN = 2;
+    DODGE_COOLDOWN = 3;
     DODGE_PENALTY_DIST_7 = 0
     DODGE_PENALTY_DIST_6 = 0
     DODGE_PENALTY_DIST_5 = 0
