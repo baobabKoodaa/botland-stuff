@@ -21,6 +21,7 @@ distanceTo = function() {}
 exists = function() {}
 figureItOut = function() {}
 filterEntities = function() {}
+findClosestAlliedBot = function () {}
 findClosestEnemyBot = function() {}
 findEntities = function() {}
 findEntitiesInRange = function() {}

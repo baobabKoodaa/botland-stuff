@@ -357,6 +357,13 @@ tryTeleportIfSafe = function(cx, cy) {
     if (isSafe(cx, cy)) tryTeleport(cx, cy)
 }
 
+NFtryTeleportIfSafe = function(cx, cy) {
+    // Never forward
+    if (cx <= x) {
+        tryTeleportIfSafe(cx, cy)
+    }
+}
+
 tryOffensiveTeleport = function() {
     if (!canTeleport()) return
     if (!weHaveSharedTarget()) thisShouldNeverExecute()
@@ -364,21 +371,21 @@ tryOffensiveTeleport = function() {
     ex = floor(sharedE / 100)
     ey = sharedE % 100
     // Preferred range4 locations
-    tryTeleportIfSafe(ex-3, ey-1)
-    tryTeleportIfSafe(ex-3, ey+1)
-    tryTeleportIfSafe(ex-4, ey)
+    NFtryTeleportIfSafe(ex-3, ey-1)
+    NFtryTeleportIfSafe(ex-3, ey+1)
+    NFtryTeleportIfSafe(ex-4, ey)
     // Preferred range3 locations
-    tryTeleportIfSafe(ex-2, ey-1)
-    tryTeleportIfSafe(ex-2, ey+1)
-    tryTeleportIfSafe(ex-3, ey)
+    NFtryTeleportIfSafe(ex-2, ey-1)
+    NFtryTeleportIfSafe(ex-2, ey+1)
+    NFtryTeleportIfSafe(ex-3, ey)
     // Fallback range4 locations
-    tryTeleportIfSafe(ex-2, ey-2)
-    tryTeleportIfSafe(ex-2, ey+2)
-    tryTeleportIfSafe(ex-1, ey+3)
-    tryTeleportIfSafe(ex-1, ey-3)
+    NFtryTeleportIfSafe(ex-2, ey-2)
+    NFtryTeleportIfSafe(ex-2, ey+2)
+    NFtryTeleportIfSafe(ex-1, ey+3)
+    NFtryTeleportIfSafe(ex-1, ey-3)
     // Fallback range3 locations
-    tryTeleportIfSafe(ex-1, ey-2)
-    tryTeleportIfSafe(ex-1, ey+2)
+    NFtryTeleportIfSafe(ex-1, ey-2)
+    NFtryTeleportIfSafe(ex-1, ey+2)
 }
 
 maybeDodge = function() {

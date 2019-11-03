@@ -15,16 +15,32 @@ function parseImports(bot) {
     return imports
 }
 
+function detectFunctionAndAttributeNames(minifiedJSFileContent) {
+    for (var i=0; i<minifiedJSFileContent.length; i++){
+        var line = minifiedJSFileContent[i]
+        if (line.includes(' = ')) {
+            thing = line.split(' =')[0]
+            if (!thing.includes(" ")) { // e.g. for (i=...
+                // TODO collect into a set
+                // TODO remove API endpoints
+                // TODO minify in order of high length to low length (because some attribute names may be also part of a longer attribute name)
+                // TODO manually minify most common names like tryMoveTo -> m ?
+                //console.log(thing)
+            }
+        }
+    }
+}
+
 function minify(jsFileContent) {
     out = []
     // Remove comments
     var content = jsFileContent.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1') // https://stackoverflow.com/a/15123777/4490400
     var lines = content.split('\n')
-    for(var i=0; i<lines.length; i++){
+    for (var i=0; i<lines.length; i++) {
         var line = lines[i]
         // Remove whitespace
         line = line.trim()
-        // Remove semicolons
+        // Remove semicolons from the end of a line, but not from the middle.
         if (line.slice(-1) == ';') line = line.substring(0, line.length-1)
         // Remove empty lines
         if (line.length > 0) out.push(line)
@@ -111,6 +127,9 @@ minifiedFiles = minifiedBotFile.concat(minifiedCommonFiles)
 // Additional checks.
 chars = countCharacters(minifiedFiles)
 assertNoDuplicateFunctionDefinitions(minifiedFiles)
+
+// WIP
+detectFunctionAndAttributeNames(minifiedFiles)
 
 console.log('/*******************', bot, chars, 'characters ******************/\n\n')
 printLines(minifiedFiles)
