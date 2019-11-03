@@ -1,5 +1,11 @@
+//!import state
+//!import utils
+
 init = function() {
     commonInitProcedures()
+
+    REPAIR_X = 0
+    REPAIR_Y = 0
 }
 
 update = function() {
@@ -24,6 +30,8 @@ update = function() {
         shield(closestFriendlyBot)
     }
 
+    // In the beginning move towards out target position (after possibly shielding some friendly)
+    if (x > REPAIR_X) moveTo(x-1, y)
 }
 
 tryToRepair = function(cx, cy) {
