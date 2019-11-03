@@ -60,8 +60,8 @@ coordinatedRetreatAndRepair = function() {
     if (currLife < 1900) {
         askAlliesToWaitForUsToRepair()
     }
-    if (x >= startX) {
-        if (x >= startX+2) {
+    if (x > max(0, startX-2)) {
+        if (x > startX) {
             tryTeleport(x-5, y)
             tryTeleport(x-4, y-1)
             tryTeleport(x-4, y+1)
@@ -72,7 +72,7 @@ coordinatedRetreatAndRepair = function() {
         tryMoveTo(x-2, y)
     }
     closestEnemy = findEntity(ENEMY, BOT, SORT_BY_DISTANCE, SORT_ASCENDING)
-    if (exists(closestEnemy)) {
+    if (exists(closestEnemy) || dmgTaken > 100) {
         coordinatedAttackWithDodging()
     }
     if (!someoneNeedsRepair()) {
