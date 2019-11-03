@@ -96,9 +96,9 @@ probablyDodge = function() {
 
     // Choose best score, break ties with a directional preference: vertical > left > right
     scoreBest = max(scoreCurrent, scoreUp, scoreDown, scoreLeft, scoreRight)
-    if (scoreUp == scoreBest) move('up')
-    if (scoreDown == scoreBest) move('down')
-    if (scoreLeft == scoreBest) move('left')
-    if (scoreRight == scoreBest) move('right')
+    if (scoreUp == scoreBest) tryMoveTo(x, y-1)
+    if (scoreDown == scoreBest) tryMoveTo(x, y+1)
+    if (scoreLeft == scoreBest) tryMoveTo(x-1, y)
+    if (scoreRight == scoreBest) tryMoveTo(x+1, y)
     // when scoreCurrent is best we fall through
 }
