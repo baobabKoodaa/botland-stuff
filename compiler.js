@@ -38,10 +38,16 @@ function minify(jsFileContent) {
     var lines = content.split('\n')
     for (var i=0; i<lines.length; i++) {
         var line = lines[i]
-        // Remove whitespace
+        // Remove whitespace, end-of-line-semicolons, unnecessary spaces
         line = line.trim()
-        // Remove semicolons from the end of a line, but not from the middle.
         if (line.slice(-1) == ';') line = line.substring(0, line.length-1)
+        line = line.replace(' = ', '=')
+        line = line.replace(' == ', '==')
+        line = line.replace('; ', ';')
+        line = line.replace('if (', 'if(')
+        line = line.replace(' else', 'else')
+        line = line.replace('else {', 'else{')
+        line = line.replace(') {', '){')
         // Remove empty lines
         if (line.length > 0) out.push(line)
     }
