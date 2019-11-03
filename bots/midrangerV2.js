@@ -10,6 +10,7 @@
 init = function() {
 
     DODGE_ARTILLERY = 1
+    FIRING_DISTANCE = 4
 
     DODGE_COOLDOWN = 3;
     DODGE_PENALTY_DIST_7 = 3
@@ -46,6 +47,8 @@ update = function () {
     } else {
         coordinatedRetreatAndRepair()
     }
+
+    thisShouldNeverExecute()
 }
 
 coordinatedRetreatAndRepair = function() {
@@ -78,13 +81,15 @@ coordinatedRetreatAndRepair = function() {
         goRepairIfNeeded(closestAlly)
         lowestLifeFriendly = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
         goRepairIfNeeded(lowestLifeFriendly)
+        wait() // If we are blocked from moving to ally in y-direction, just wait. We don't want to ruin our formation by moving in x-direction.
     }
 }
 
 goRepairIfNeeded = function(entity) {
-    if (exists(entity) && getLife(entity) < 1900) {
+    if (exists(entity) && getLife(entity) < 2000) {
         if (willRepair(entity)) repair(entity)
-        moveTo(entity)
+        if (x == getX(entity) && y < getY(entity)) tryMoveTo(x, y+1)
+        if (x == getX(entity) && y > getY(entity)) tryMoveTo(x, y-1)
     }
 }
 
@@ -100,17 +105,102 @@ longTimeSinceLastRepair = function() {
     return sharedD < turn-10
 }
 
-assignNewSharedTarget = function() {
+scoreTargetCandidate = function(targetCandidate) {
+    scoreTCTotal = 0
+
     // TODO scoring jossa otetaan järkevästi huomioon sekä etäisyys että helat (etäisyydessä _ei vain meihin etäisyys vaan kaikkiin friendlyihin_!)
     // TODO miten sais targetoitua chippejä huomioiden että getEntityAt ei osaa tunnistaa chippiä
-    lowestHealthEnemy = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
     // TODO sometimes lowest health target has escaped behind a wall of enemies. in that case we want to ditch it.
     // TODO scoring huomioi inferred reflectivity
-    if (exists(lowestHealthEnemy)) {
-        ex = getX(lowestHealthEnemy)
-        ey = getY(lowestHealthEnemy)
+
+    // Prefer low health enemies
+    scoreTCTotal += getLife(targetCandidate)
+
+    // Prefer enemies who are in firing range of as many friendly bots as possible
+    ex = getX(targetCandidate)
+    ey = getY(targetCandidate)
+    scoreTCTotal += scoreTargetDist(ex, ey, f0x, f0y)
+    scoreTCTotal += scoreTargetDist(ex, ey, f1x, f1y)
+    scoreTCTotal += scoreTargetDist(ex, ey, f2x, f2y)
+    scoreTCTotal += scoreTargetDist(ex, ey, f3x, f3y)
+
+    return scoreTCTotal
+}
+
+scoreTargetDist = function(ex, ey, fx, fy) {
+    if (fx >= 0) { // May be undefined!
+        dx = abs(ex - fx)
+        dy = abs(ey - fy)
+        scoreTCDist = 50*(dx+dy)
+        if (dx+dy > FIRING_DISTANCE) scoreTCDist += 150
+        return scoreTCDist
+    }
+    // If this friendly bot doesn't exist, all candidates will be affected the same way regardless if this value is 0 or something else.
+    return 0
+}
+
+refreshAllyPositions = function() {
+    // Variables f0x,f0y,f1x,f1y,f2x,f2y,f3x,f3y will hold positions for nearby allies including self. Refreshed as needed.
+    array1 = findEntities(IS_OWNED_BY_ME, BOT, true)
+    // Clear out any stale values.
+    f0x = -1
+    f0y = -1
+    f1x = -1
+    f1y = -1
+    f2x = -1
+    f2y = -1
+    f3x = -1
+    f3y = -1
+    // Assign new values
+    if (size(array1) > 0) {
+        f0x = getX(array1[0])
+        f0y = getY(array1[0])
+    }
+    if (size(array1) > 1) {
+        f1x = getX(array1[1])
+        f1y = getY(array1[1])
+    }
+    if (size(array1) > 2) {
+        f2x = getX(array1[2])
+        f2y = getY(array1[2])
+    }
+    if (size(array1) > 3) {
+        f3x = getX(array1[3])
+        f3y = getY(array1[3])
+    }
+}
+
+chooseTarget = function() {
+    bestTarget = null
+    bestTargetCandidateScore = 1000000
+
+    // Find nearby allied bots. This is hacky, because we need to find both allied and enemy bots, but we can only use array1!
+    refreshAllyPositions()
+
+    array1 = findEntities(ENEMY, BOT, false)
+    for (i = 0; i < size(array1); i++) {
+        targetCandidateScore = scoreTargetCandidate(array1[i])
+        if (targetCandidateScore < bestTargetCandidateScore) {
+            bestTargetCandidateScore = targetCandidateScore
+            bestTarget = array1[i]
+        }
+    }
+    return bestTarget
+}
+
+assignNewSharedTarget = function() {
+    bestTarget = chooseTarget() //was previously: bestTarget = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
+    if (exists(bestTarget)) {
+        ex = getX(bestTarget)
+        ey = getY(bestTarget)
         sharedE = 100*ex + ey
     } else {
+
+        array1 = findEntities(ENEMY, BOT, false)
+        if (size(array1) > 0) {
+            debugLog("turn", turn, "failed to assign a target", x, y)
+        }
+
         removeSharedTarget()
     }
 }
@@ -134,8 +224,9 @@ maybeCoordinateRetreat = function() {
 shouldWeCoordinateRetreat = function() {
     if (!willRepair()) return false // TODO make this work also in case where we have DEDICATED repairers
     if (!longTimeSinceLastRepair()) return false // Prevent whipsaw
-    safetyThreshold = 400 // If we predict we'll have less life than this next turn, then we should teleport away now.
-    predictedLife = currLife - dmgTaken // We predict we'll take same amount of damage here next turn
+    safetyThreshold = 400 // If we predict we'll have less life than threshold on next turn, then we should teleport away now.
+    predictedDmg = max(300, dmgTaken)
+    predictedLife = currLife - predictedDmg
     if (countEnemyBotsWithMeleeCardinality(x, y) >= 1) predictedLife -= 300 // Remember that we also have a step-out-of-danger move even if we don't coordinate a retreat.
     // TODO consider enemy reflectors in some way?
     // TODO consider our own reflectors in some way?
@@ -229,7 +320,7 @@ moveCloserOrSomething = function(ex, ey) {
 }
 
 isSafe = function(cx, cy) {
-    return !isLocationHot(cx, cy) && countEnemyBotsWithMeleeCardinality(cx, cy) == 0
+    return !isLocationHot(cx, cy) && countEnemyBotsWithMeleeCardinality(cx, cy) == 0 && countEnemyBotsWithinDist(cx, cy, 1, 4) <= 3
 }
 
 tryMoveToIfSafe = function(cx, cy) {
