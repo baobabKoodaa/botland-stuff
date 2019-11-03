@@ -25,7 +25,10 @@ canActuallyTeleport = function(cx, cy) {
 }
 
 tryTeleport = function(cx, cy) {
-    if (canActuallyTeleport(cx, cy)) teleport(cx, cy)
+    if (canActuallyTeleport(cx, cy)) {
+        lastMoveTurn = turn
+        teleport(cx, cy)
+    }
 }
 
 triggerCoordinatedTeleport = function() {
@@ -45,7 +48,10 @@ coordinatedTeleportTriggered = function() {
 }
 
 tryMoveTo = function(cx, cy) {
-    if (canMoveTo(cx, cy)) moveTo(cx, cy);
+    if (canMoveTo(cx, cy)) {
+        lastMoveTurn = turn
+        moveTo(cx, cy)
+    }
 }
 
 inMeleeOrEnemyEnclosing = function() {

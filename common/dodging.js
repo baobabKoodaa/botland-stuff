@@ -25,6 +25,13 @@ scoreDodgeLocation = function(cx, cy) {
         else s -= cardinalityExtra
     }
 
+    // Avoid moving to areas where many enemy bots might attack us
+    desiredCountNearbyEnemies = 1
+    actualCountNearbyEnemies = countEnemyBotsWithinDist(cx, cy, 1, 4)
+    if (actualCountNearbyEnemies > desiredCountNearbyEnemies) {
+        s -= actualCountNearbyEnemies - desiredCountNearbyEnemies
+    }
+
     // Avoid edges of the map
     if (cx == 0 || cy == 0 || cx == arenaWidth-1 || cy == arenaHeight-1) {
         s -= DODGE_PENALTY_EDGE_OF_MAP
@@ -85,7 +92,7 @@ probablyDodge = function() {
     scoreRight = scoreDodgeLocation(x+1, y) - actionCost;
     scoreCurrent = scoreDodgeLocation(x, y); // No actionCost here, because if we stay, we get to act.
 
-    debugLog('T' + turn + 'u(' + scoreUp + ') d(' + scoreDown + ') l(' + scoreLeft + ') r(' + scoreRight + ') c(' + scoreCurrent + ')');
+    debugLog('T' + turn + ' x' + x + ' y' + y + ' u' + scoreUp + ' d' + scoreDown + ' l' + scoreLeft + ' r' + scoreRight + ' c' + scoreCurrent + '');
 
     // Choose best score, break ties with a directional preference: vertical > left > right
     scoreBest = max(scoreCurrent, scoreUp, scoreDown, scoreLeft, scoreRight)

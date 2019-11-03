@@ -39,7 +39,7 @@ update = function () {
     commonStateUpdates()
     updateHeatmap()
 
-    debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
+    //debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
 
     if (sharedC == MODE_ATTACK) {
         coordinatedAttackWithDodging()
@@ -93,7 +93,8 @@ tryMoveToIfSafe = function(cx, cy) {
 
 assignNewSharedTarget = function() {
     // TODO scoring jossa otetaan järkevästi huomioon sekä etäisyys että helat (etäisyydessä _ei vain meihin etäisyys vaan kaikkiin friendlyihin_!)
-    lowestHealthEnemy = findEntity(ENEMY, ANYTHING, SORT_BY_LIFE, SORT_ASCENDING)
+    // TODO miten sais targetoitua chippejä huomioiden että getEntityAt ei osaa tunnistaa chippiä
+    lowestHealthEnemy = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
     // TODO sometimes lowest health target has escaped behind a wall of enemies. in that case we want to ditch it.
     // TODO scoring huomioi inferred reflectivity
     if (exists(lowestHealthEnemy)) {
@@ -157,8 +158,6 @@ coordinatedAttackWithDodging = function() {
 
     sharedC = MODE_ATTACK
 
-    debugLog(currLife, sharedE, turn)
-
     maybeCoordinateRetreat()
     if (countEnemyBotsWithMeleeCardinality(x, y) >= 1) {
         // Try to step out of melee cardinality.
@@ -176,6 +175,7 @@ coordinatedAttackWithDodging = function() {
         // We have shared target
         ex = floor(sharedE / 100)
         ey = sharedE % 100
+        debugLog("turn", turn, "target", ex, ey)
         // Are we too far to see the target tile?
         if (getDistanceTo(ex, ey) > 5) {
             moveCloserOrSomething(ex, ey)
@@ -202,7 +202,7 @@ coordinatedAttackWithDodging = function() {
     if (exists(chipOrCPU)) {
         maybeDodge()
         if (willMissilesHit(chipOrCPU)) fireMissiles(chipOrCPU)
-        moveTo(chipOrCPU)
+        tryMoveTo(chipOrCPU)
     }
 
     // Move towards CPU.
@@ -246,11 +246,10 @@ tryDefensiveTeleport = function() {
 }
 
 maybeDodge = function() {
-    if (isLocationHot(x, y)) {
-        // Cooldown for evade so we dont waste all our turns evading. This is more crucial to midranger compared to outranger,
-        // because midranger will end up in missile vs missile/laser fights, whereas outranger can actually outrange opponents.
-        if (turn >= lastDodgeTurn+DODGE_COOLDOWN) {
-            lastDodgeTurn = turn
+    if (turn >= lastMoveTurn + DODGE_COOLDOWN) {
+        // Cooldown so we don't waste all our turns evading. For example, cooldown 3 prevents normal-haste artillery from ever landing a hit on us.
+        // This is more crucial to midranger compared to outranger, because midranger will end up in missile vs missile/laser fights, whereas outranger can actually outrange opponents.
+        if (isLocationHot(x, y)) {
             probablyDodge()
         }
     }

@@ -1,10 +1,11 @@
 commonInitProcedures = function() {
-    initializeSharedVariables();
-    assignId();
-    turn = 0;
-    currLife = 2000;
+    initializeSharedVariables()
+    assignId()
+    turn = 0
+    currLife = 2000
     currDistToClosestBot = 999
-    lastDodgeTurn = -1000
+    lastDodgeTurn = -1000 // Legacy. TODO: change all bots to use lastMoveTurn instead.
+    lastMoveTurn = 0
     startX = x
     startY = y
 
@@ -12,18 +13,18 @@ commonInitProcedures = function() {
     HEAT_SIT = 90
     HOTNESS_THRESHOLD = 90
 
-    xCPU = arenaWidth-2;
+    xCPU = arenaWidth-2
     yCPU = (arenaHeight-1)/2
 }
 
 commonStateUpdates = function() {
-    turn += 1;
-    prevLife = currLife;
-    currLife = life;
+    turn += 1
+    prevLife = currLife
+    currLife = life
     dmgTaken = max(0, prevLife-currLife)
     if (canLayMine()) hasBeenAbleToLayMine = true
-    prevDistToClosestBot = currDistToClosestBot;
-    currDistToClosestBot = distToClosestEnemyBot(x, y);
+    prevDistToClosestBot = currDistToClosestBot
+    currDistToClosestBot = distToClosestEnemyBot(x, y)
 }
 
 initializeSharedVariables = function() {
@@ -31,8 +32,8 @@ initializeSharedVariables = function() {
     // sharedB reserved for shared array2 (different use cases depending on bot)
 }
 assignId = function() {
-    id = sharedA;
-    sharedA += 1;
+    id = sharedA
+    sharedA += 1
 };
 
 probablyHasLandMines = function() {
