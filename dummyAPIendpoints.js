@@ -14,6 +14,7 @@ canReflect = function() {}
 canShield = function() {}
 canTeleport = function() {}
 canZap = function() {}
+ceil = function() {}
 cloak = function() {}
 debugLog = function() {}
 distanceTo = function() {}

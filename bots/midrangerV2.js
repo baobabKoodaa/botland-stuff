@@ -221,16 +221,33 @@ maybeCoordinateRetreat = function() {
     }
 }
 
+determineSafetyThreshold = function() {
+    defaultSafetyThreshold = 500
+    // Our safety threshold should be lower when our shared target is about to die (take risks to finish off enemies before they can repair).
+    // (We don't want to refresh shared target now so we'll look at life of the lowest-health enemy in range instead of life of shared target).
+    lowestLifeEnemy = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
+    if (!exists(lowestLifeEnemy)) {
+        // Maybe other units are near a target but we don't have anyone near us.
+        return defaultSafetyThreshold
+    }
+    lifeLLE = getLife(lowestLifeEnemy)
+    numberOfMissilesNeeded = ceil(lifeLLE / 300)
+    if (numberOfMissilesNeeded == 1) return 100
+    if (numberOfMissilesNeeded == 2) return 300
+    return defaultSafetyThreshold
+}
+
 shouldWeCoordinateRetreat = function() {
     if (!willRepair()) return false // TODO make this work also in case where we have DEDICATED repairers
     if (!longTimeSinceLastRepair()) return false // Prevent whipsaw
-    safetyThreshold = 400 // If we predict we'll have less life than threshold on next turn, then we should teleport away now.
     predictedDmg = max(300, dmgTaken)
     predictedLife = currLife - predictedDmg
     if (countEnemyBotsWithMeleeCardinality(x, y) >= 1) predictedLife -= 300 // Remember that we also have a step-out-of-danger move even if we don't coordinate a retreat.
     // TODO consider enemy reflectors in some way?
     // TODO consider our own reflectors in some way?
-    // TODO if enemy is about to die, our safetyThreshold should be less! (take a risk to finish off a dying enemy)
+
+    // If we predict we'll have less life than threshold on next turn, then we should teleport away now.
+    safetyThreshold = determineSafetyThreshold()
     return predictedLife < safetyThreshold
 }
 
@@ -254,11 +271,11 @@ coordinatedAttackWithDodging = function() {
         // We have shared target
         ex = floor(sharedE / 100)
         ey = sharedE % 100
-        // Are we too far to see the target tile?
-        if (getDistanceTo(ex, ey) > 5) {
+        // Are we too far to shoot at the target tile?
+        if (getDistanceTo(ex, ey) > FIRING_DISTANCE) {
             moveCloserOrSomething(ex, ey)
         }
-        // We can see target tile. Enemy might have moved from the target tile or died; always re-assign lowest-health visible enemy as target (when old target tile is visible).
+        // We can see target tile. Enemy might have moved from the target tile or died; always re-assign shared target (whenever old target tile is visible AND ALSO adjacent tiles from target are visible (to prevent whipsawing targets)).
         assignNewSharedTarget()
         // It's possible that we have no enemies in sight.
         if (sharedE > 0) {
@@ -267,10 +284,12 @@ coordinatedAttackWithDodging = function() {
             ey = sharedE % 100
             sharedTargetEntity = getEntityAt(ex, ey)
             maybeDodge()
-            if (willMissilesHit(sharedTargetEntity)) fireMissiles(sharedTargetEntity)
-            else {
-                // The target may be at distance 5 and our missile range is usually 4
+            if (willMissilesHit(sharedTargetEntity)) {
+                fireMissiles(sharedTargetEntity)
+            } else if (getDistanceTo(ex, ey) > FIRING_DISTANCE) {
                 moveCloserOrSomething(ex, ey)
+            } else {
+                thisShouldNeverExecute()
             }
         }
     }
@@ -317,6 +336,8 @@ moveCloserOrSomething = function(ex, ey) {
         }
         fireMissiles()
     }
+
+    wait() // ???
 }
 
 isSafe = function(cx, cy) {
