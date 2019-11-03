@@ -1,5 +1,6 @@
 thisShouldNeverExecute = function() {
     // Flag a bug with taunt crying emoji.
+    debugLog('ERROR DETECTED ON TURN', turn, "by bot at", x, y)
     taunt('CRYING')
 }
 
