@@ -4,8 +4,8 @@
 init = function() {
 
     KILL_REPAIRERS = 0
-    ALTERNATE_REFLECT_CLOAK = 0
-    DODGE_ARTILLERY = 1
+    ALTERNATE_REFLECT_CLOAK = 1
+    DODGE_ARTILLERY = 0
 
     commonInitProcedures()
     initGoalToNothing()
@@ -16,8 +16,10 @@ update = function() {
     commonStateUpdates()
 
     //startSpecialMoveThreeCloakMoveThreeTele()
-    startSpecialCloakMoveThreeTele()
-    //startSpecialReflectTele()
+    //startSpecialCloakMoveThreeTele()
+    startSpecialReflectTele()
+    //startSpecialTeleCloak()
+    //startSpecialSlowRush()
 
     // Set target ex,ey.
     ex = xCPU
@@ -77,6 +79,21 @@ update = function() {
     }
 
     fireArtillery(target)
+}
+
+startSpecialSlowRush = function() {
+    cloakTurn = 5
+    if (turn == cloakTurn && canCloak() && !isCloaked()) {
+        cloak()
+    }
+    if (turn <= cloakTurn+3) tryMoveTo(x+1, y)
+    if (turn == cloakTurn+4) {
+        tryTeleport(x+5, y)
+        tryTeleport(x+4, y+1)
+        tryTeleport(x+4, y-1)
+        tryTeleport(x+3, y+2)
+        tryTeleport(x+3, y-2)
+    }
 }
 
 setNewGoal = function() {
@@ -154,14 +171,25 @@ startSpecialReflectTele = function() {
     }
 }
 
+startSpecialTeleCloak = function() {
+    if (turn == 1) {
+        tryTeleport(x+5, y)
+        tryTeleport(x+4, y+1)
+        tryTeleport(x+4, y-1)
+        tryTeleport(x+3, y+2)
+        tryTeleport(x+3, y-2)
+    }
+    if (turn == 2 && canCloak()) cloak()
+}
+
 getArtyTarget = function() {
     if (KILL_REPAIRERS) {
         option = getEntityAt(xCPU-1, yCPU)
         if (exists(option) && willArtilleryHit(option)) return option
-        //option = getEntityAt(xCPU, yCPU-1)
-        //if (exists(option) && willArtilleryHit(option)) return option
-        //option = getEntityAt(xCPU, yCPU+1)
-        //if (exists(option) && willArtilleryHit(option)) return option
+        option = getEntityAt(xCPU, yCPU-1)
+        if (exists(option) && willArtilleryHit(option)) return option
+        option = getEntityAt(xCPU, yCPU+1)
+        if (exists(option) && willArtilleryHit(option)) return option
     }
     cpu = getEntityAt(xCPU, yCPU)
     if (exists(cpu) && willArtilleryHit(cpu)) return cpu
