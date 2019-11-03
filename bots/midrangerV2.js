@@ -74,8 +74,17 @@ coordinatedRetreatAndRepair = function() {
     } else if (currLife < 2000) {
         repair()
     } else {
-        // TODO repair allies too
-        wait()
+        closestAlly = findClosestAlliedBot()
+        goRepairIfNeeded(closestAlly)
+        lowestLifeFriendly = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
+        goRepairIfNeeded(lowestLifeFriendly)
+    }
+}
+
+goRepairIfNeeded = function(entity) {
+    if (exists(entity) && getLife(entity) < 1900) {
+        if (willRepair(entity)) repair(entity)
+        moveTo(entity)
     }
 }
 
