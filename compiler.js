@@ -67,6 +67,7 @@ function countCharacters(arr) {
     for (var j=0; j<arr.length; j++) {
         line = arr[j]
         count += line.length
+        count += 1 // Line break
     }
     return count;
 }
