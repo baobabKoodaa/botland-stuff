@@ -4,7 +4,7 @@
  *		array2[i+2] = y coordinate of tile
  *		array2[i+3] = heat of tile
  *		Should be iterated from index 1 up to index indicated in array2[0] (exclusive).
- *		If array2[0] > 30 , then overflow to index 1 and start overwriting old stuff.
+ *		If array2[0] > 40 , then overflow to index 1 and start overwriting old stuff.
  */
 
 initializeHeatmap = function() {
@@ -16,7 +16,7 @@ initializeHeatmap = function() {
 }
 
 findTileIndexFromHeatmap = function(cx, cy) {
-    for (i=1; i<=30; i+=4) {
+    for (i=1; i<=40; i+=4) {
         hx = array2[i+1];
         hy = array2[i+2];
         if (hx == cx && hy == cy) {
@@ -27,25 +27,26 @@ findTileIndexFromHeatmap = function(cx, cy) {
 }
 
 updateHeatmapLocation = function(cx, cy, heatAmount) {
+    // We need to always write the heat in pointer location.
+    // If tile already exists in heatmap, we will remove it from the old location and write to new location.
+    // If the old heat is not stale, we will add it to new heat.
     tileIndex = findTileIndexFromHeatmap(cx, cy);
     if (tileIndex > 0) {
         // Tile is already in heatmap
-        if (turn > array2[tileIndex]) {
-            // Clear out any expired residual heat.
-            array2[tileIndex+3] = 0
+        if (turn <= array2[tileIndex]) {
+            // Old heat is not stale, add it to new heat.
+            oldHeat = array2[tileIndex+3]
+            heatAmount += oldHeat
         }
-        // Add new heat.
-        oldHeat = array2[tileIndex+3]
-        newHeat = oldHeat + heatAmount
-        array2[tileIndex+3] = newHeat
-        // Update keep-alive
-        array2[tileIndex] = turn + HEAT_LONGEVITY
-        return
+        // Remove old tile from heatmap
+        array2[tileIndex] = null
+        array2[tileIndex+1] = null
+        array2[tileIndex+2] = null
+        array2[tileIndex+3] = null
     }
 
-    // Add tile to next free slot.
-    // If we are near array max limit, overflow back to index 1.
-    if (array2[0] > 30) {
+    // Add tile to next free slot (with overflow to rewrite old slots when we run out of space).
+    if (array2[0] > 40) {
         array2[0] = 1;
     }
     j = array2[0];

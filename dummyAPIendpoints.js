@@ -18,6 +18,7 @@ ceil = function() {}
 cloak = function() {}
 debugLog = function() {}
 distanceTo = function() {}
+emp = function() {}
 exists = function() {}
 figureItOut = function() {}
 filterEntities = function() {}

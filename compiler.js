@@ -25,6 +25,7 @@ function detectFunctionAndAttributeNames(minifiedJSFileContent) {
                 // TODO remove API endpoints
                 // TODO minify in order of high length to low length (because some attribute names may be also part of a longer attribute name)
                 // TODO manually minify most common names like tryMoveTo -> m ?
+                // TODO replace literals with their actual values (careful to make sure the variable is defined only once!)
                 //console.log(thing)
             }
         }
