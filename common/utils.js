@@ -48,7 +48,7 @@ coordinatedTeleportTriggered = function() {
     return false
 }
 
-tryMoveTo = function(cx, cy) {
+m = function(cx, cy) {
     if (canMoveTo(cx, cy)) {
         lastMoveTurn = turn
         moveTo(cx, cy)

@@ -30,12 +30,15 @@ init = function() {
 
     MODE_RETREAT_REPAIR = 0
     MODE_ATTACK = 1
-    sharedC = MODE_ATTACK
-    sharedD = -1000 // last repair turn
+    mode = MODE_ATTACK
+    sharedC = -1000 // last turn when enemy was discovered near our repair station
+    sharedD = -1000 // last turn when some bot needed a repair
     sharedE = -1 // shared target x,y (100*x + y)
 
     commonInitProcedures()
     initializeHeatmap()
+
+    repairGoalX = max(0, startX-2)
 }
 
 update = function () {
@@ -45,37 +48,42 @@ update = function () {
 
     //debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
 
-    if (sharedC == MODE_ATTACK) {
+    if (mode == MODE_ATTACK) {
         coordinatedAttackWithDodging()
     } else {
-        coordinatedRetreatAndRepair()
+        retreatAndRepair()
     }
 
     thisShouldNeverExecute()
 }
 
-coordinatedRetreatAndRepair = function() {
-    sharedC = MODE_RETREAT_REPAIR
-    removeSharedTarget()
+retreatAndRepair = function() {
+    mode = MODE_RETREAT_REPAIR
     if (currLife < 1900) {
         askAlliesToWaitForUsToRepair()
     }
-    if (x > max(0, startX-2)) {
-        if (x > startX) {
+    if (x > repairGoalX) {
+        if (x > repairGoalX+2) {
             tryTeleport(x-5, y)
             tryTeleport(x-4, y-1)
             tryTeleport(x-4, y+1)
             tryTeleport(x-3, y-2)
             tryTeleport(x-3, y+2)
         }
-        tryMoveTo(x-1, y)
-        tryMoveTo(x-2, y)
+        m(x-1, y)
+        m(x-2, y)
     }
     closestEnemy = findEntity(ENEMY, BOT, SORT_BY_DISTANCE, SORT_ASCENDING)
-    if (exists(closestEnemy) || dmgTaken > 100) {
+    if ((exists(closestEnemy) && getX(closestEnemy) <= repairGoalX+5) || (x <= repairGoalX && dmgTaken > 100)) {
+        // Repair interrupted if enemy is seen close to repair line _or_ we are taking damage at or behind repair line (from arty at 7 range probably)
+        debugLog("turn", turn, "repair interrupted")
+        tellAlliesEnemyNearRepairStation()
+        removeSharedTarget() // remove stale, old target
         coordinatedAttackWithDodging()
     }
     if (!someoneNeedsRepair()) {
+        // Repair finished from all units
+        removeSharedTarget() // remove stale target
         coordinatedAttackWithDodging()
     } else if (currLife < 2000) {
         repair()
@@ -92,8 +100,8 @@ coordinatedRetreatAndRepair = function() {
 goRepairIfNeeded = function(entity) {
     if (exists(entity) && getLife(entity) < 2000) {
         if (willRepair(entity)) repair(entity)
-        if (x == getX(entity) && y < getY(entity)) tryMoveTo(x, y+1)
-        if (x == getX(entity) && y > getY(entity)) tryMoveTo(x, y-1)
+        if (x == getX(entity) && y < getY(entity)) m(x, y+1)
+        if (x == getX(entity) && y > getY(entity)) m(x, y-1)
     }
 }
 
@@ -105,8 +113,12 @@ askAlliesToWaitForUsToRepair = function() {
     sharedD = turn
 }
 
-longTimeSinceLastRepair = function() {
-    return sharedD < turn-10
+isEnemyNearRepairStation = function() {
+    return sharedC >= turn-3
+}
+
+tellAlliesEnemyNearRepairStation = function() {
+    sharedC = turn
 }
 
 scoreTargetCandidate = function(targetCandidate) {
@@ -219,14 +231,9 @@ removeSharedTarget = function() {
 
 // TODO shield instead of repair?
 
-maybeCoordinateRetreat = function() {
-    if (shouldWeCoordinateRetreat()) {
-        coordinatedRetreatAndRepair()
-    }
-}
-
 determineSafetyThreshold = function() {
     defaultSafetyThreshold = 300
+    if (someoneNeedsRepair()) defaultSafetyThreshold = 500
     // Our safety threshold should be lower when our shared target is about to die (take risks to finish off enemies before they can repair).
     // (We don't want to refresh shared target now so we'll look at life of the lowest-health enemy in range instead of life of shared target).
     lowestLifeEnemy = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
@@ -241,25 +248,34 @@ determineSafetyThreshold = function() {
     return defaultSafetyThreshold
 }
 
-shouldWeCoordinateRetreat = function() {
+shouldWeRetreat = function() {
     if (!willRepair()) return false // TODO make this work also in case where we have DEDICATED repairers
-    if (!longTimeSinceLastRepair()) return false // Prevent whipsaw
+    if (isEnemyNearRepairStation()) return false // prevent whipsaw
+
+    // If some of our allies have already retreated and we have only 2 bots or less fighting, retreat regardless of our health!
+    friendsNearBattle = size(findEntitiesInRange(IS_OWNED_BY_ME, BOT, true, 5))
+    if (someoneNeedsRepair() && friendsNearBattle <= 2) {
+        return true
+    }
+
+    // Normal case: if we predict we'll have less life than threshold on next turn, then we should teleport away now.
     predictedDmg = max(300, dmgTaken)
     predictedLife = currLife - predictedDmg
     if (countEnemyBotsWithMeleeCardinality(x, y) >= 1) predictedLife -= 300 // Remember that we also have a step-out-of-danger move even if we don't coordinate a retreat.
-    // TODO consider enemy reflectors in some way?
-    // TODO consider our own reflectors in some way?
-
-    // If we predict we'll have less life than threshold on next turn, then we should teleport away now.
     safetyThreshold = determineSafetyThreshold()
     return predictedLife < safetyThreshold
+
+    // TODO consider enemy reflectors in some way?
+    // TODO consider our own reflectors in some way?
 }
 
 coordinatedAttackWithDodging = function() {
 
-    sharedC = MODE_ATTACK
+    mode = MODE_ATTACK
 
-    maybeCoordinateRetreat()
+    if (shouldWeRetreat()) {
+        retreatAndRepair()
+    }
     if (!weHaveSharedTarget()) {
         assignNewSharedTarget()
     }
@@ -303,13 +319,16 @@ coordinatedAttackWithDodging = function() {
     if (exists(chipOrCPU)) {
         maybeDodge()
         if (willMissilesHit(chipOrCPU)) fireMissiles(chipOrCPU)
-        tryMoveTo(chipOrCPU)
+        m(chipOrCPU)
     }
 
     // Move towards CPU.
-    tryMoveTo(x+1, y)
-    if (y > yCPU) tryMoveTo(x, y-1)
-    else tryMoveTo(x, y+1)
+    tryMoveToIfSafe(x+1, y)
+    if (y > yCPU) tryMoveToIfSafe(x, y-1)
+    else tryMoveToIfSafe(x, y+1)
+
+    // Not safe to move
+    repairOrWait()
 }
 
 moveCloserOrSomething = function(ex, ey) {
@@ -341,13 +360,17 @@ moveCloserOrSomething = function(ex, ey) {
         fireMissiles()
     }
 
-    // We can't move towards target, we can't fire. What to do?
+    // We can't move towards target, we can't fire.
+    repairOrWait()
+}
+
+repairOrWait = function() {
     if (willRepair()) repair()
     if (willRepair(getEntityAt(x+1, y))) repair()
     if (willRepair(getEntityAt(x-1, y))) repair()
     if (willRepair(getEntityAt(x, y+1))) repair()
     if (willRepair(getEntityAt(x, y-1))) repair()
-    wait() // ???
+    wait()
 }
 
 isSafe = function(cx, cy) {
@@ -355,7 +378,7 @@ isSafe = function(cx, cy) {
 }
 
 tryMoveToIfSafe = function(cx, cy) {
-    if (isSafe(cx, cy)) tryMoveTo(cx, cy)
+    if (isSafe(cx, cy)) m(cx, cy)
 }
 
 tryTeleportIfSafe = function(cx, cy) {
