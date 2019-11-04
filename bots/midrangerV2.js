@@ -226,7 +226,7 @@ maybeCoordinateRetreat = function() {
 }
 
 determineSafetyThreshold = function() {
-    defaultSafetyThreshold = 500
+    defaultSafetyThreshold = 300
     // Our safety threshold should be lower when our shared target is about to die (take risks to finish off enemies before they can repair).
     // (We don't want to refresh shared target now so we'll look at life of the lowest-health enemy in range instead of life of shared target).
     lowestLifeEnemy = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
@@ -237,7 +237,7 @@ determineSafetyThreshold = function() {
     lifeLLE = getLife(lowestLifeEnemy)
     numberOfMissilesNeeded = ceil(lifeLLE / 300)
     if (numberOfMissilesNeeded == 1) return 100
-    if (numberOfMissilesNeeded == 2) return 300
+    if (numberOfMissilesNeeded == 2) return 200
     return defaultSafetyThreshold
 }
 
@@ -314,7 +314,7 @@ coordinatedAttackWithDodging = function() {
 
 moveCloserOrSomething = function(ex, ey) {
 
-    // Try to move closer, with preference and safety considerations.
+    // Try to move closer to target, with preference and safety considerations.
     xDiff = abs(x - ex)
     yDiff = abs(y - ey)
     if (xDiff > yDiff) {
@@ -341,8 +341,12 @@ moveCloserOrSomething = function(ex, ey) {
         fireMissiles()
     }
 
-    // We can't move closer, we can't fire. What to do?
+    // We can't move towards target, we can't fire. What to do?
     if (willRepair()) repair()
+    if (willRepair(getEntityAt(x+1, y))) repair()
+    if (willRepair(getEntityAt(x-1, y))) repair()
+    if (willRepair(getEntityAt(x, y+1))) repair()
+    if (willRepair(getEntityAt(x, y-1))) repair()
     wait() // ???
 }
 
