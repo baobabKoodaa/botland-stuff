@@ -59,6 +59,9 @@ update = function () {
 
 retreatAndRepair = function() {
     mode = MODE_RETREAT_REPAIR
+    if (isEnemyNearRepairStation()) {
+        coordinatedAttackWithDodging()
+    }
     if (currLife < 1900) {
         askAlliesToWaitForUsToRepair()
     }
@@ -286,6 +289,12 @@ coordinatedAttackWithDodging = function() {
         tryMoveToIfSafe(x-1, y)
         tryMoveToIfSafe(x+1, y)
         tryOffensiveTeleport()
+    }
+    if (canShield()) {
+        maybeDodge()
+        lowestLifeFriendly = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
+        if (exists(lowestLifeFriendly) && canShield(lowestLifeFriendly) && getLife(lowestLifeFriendly) < 1900) shield(lowestLifeFriendly)
+        shield()
     }
     if (weHaveSharedTarget()) {
         // We have shared target
