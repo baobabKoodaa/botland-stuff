@@ -10,7 +10,7 @@ commonInitProcedures = function() {
     startX = x
     startY = y
 
-    HEAT_LONGEVITY = 3
+    HEAT_LONGEVITY = 2
     HEAT_SIT = 90
     HOTNESS_THRESHOLD = 90
 
