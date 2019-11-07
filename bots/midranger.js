@@ -8,7 +8,7 @@ init = function() {
     DODGE_ARTILLERY = 1
 
     FORWARD_MINE_ATTACKS = 0
-    SS_BACKWARD_MINES = 0
+    SS_BACKWARD_MINES = 4
     SS_BACKWARD_LEFT = 2
 
     SS_REFLECT_TURN = 0
@@ -59,6 +59,7 @@ update = function () {
 
 specialActions = function() {
     if (turn == SS_REFLECT_TURN && canReflect()) reflect()
+    if (canShield()) shield()
 
     d = distToClosestEnemyBot(x, y)
     if (FORWARD_MINE_ATTACKS && probablyHasLandMines()) {
@@ -173,15 +174,15 @@ maybeRepair = function() {
                     cloak()
                 }
                 // Try to move towards the 'corner' of repair-man
-                if (x > REPAIR_X+1) tryMoveTo(x-1, y)
-                if (x < REPAIR_X-1) tryMoveTo(x+1, y)
-                if (y > REPAIR_Y+1) tryMoveTo(x, y-1)
-                if (y < REPAIR_Y-1) tryMoveTo(x, y+1)
+                if (x > REPAIR_X+1) m(x-1, y)
+                if (x < REPAIR_X-1) m(x+1, y)
+                if (y > REPAIR_Y+1) m(x, y-1)
+                if (y < REPAIR_Y-1) m(x, y+1)
                 // Try to move next to the repair-man
-                if (x > REPAIR_X) tryMoveTo(x-1, y)
-                if (x < REPAIR_X) tryMoveTo(x+1, y)
-                if (y > REPAIR_Y) tryMoveTo(x, y-1)
-                if (y < REPAIR_Y) tryMoveTo(x, y+1)
+                if (x > REPAIR_X) m(x-1, y)
+                if (x < REPAIR_X) m(x+1, y)
+                if (y > REPAIR_Y) m(x, y-1)
+                if (y < REPAIR_Y) m(x, y+1)
                 // Fallback
                 if (willMissilesHit()) fireMissiles()
                 if (canLayMine()) layMine()
@@ -212,17 +213,17 @@ maybeRepair = function() {
             if (exists(lowestHealthNearbyFriendlyBot) && getLife(lowestHealthNearbyFriendlyBot) < 2000) {
                 // Still have to wait for some friends to repair. Move out of the way.
                 if (y != REPAIR_Y && (x == REPAIR_X+1 || x == REPAIR_X+2)) {
-                    tryMoveTo(x-1, y)
-                    if (y < yCPU) tryMoveTo(x, y+1)
-                    else tryMoveTo(y-1)
-                    tryMoveTo(x+1, y)
+                    m(x-1, y)
+                    if (y < yCPU) m(x, y+1)
+                    else m(y-1)
+                    m(x+1, y)
                 }
                 if (y == REPAIR_Y) {
-                    if (y < yCPU) tryMoveTo(x, y+1)
-                    else tryMoveTo(y-1)
-                    tryMoveTo(x+1, y)
+                    if (y < yCPU) m(x, y+1)
+                    else m(y-1)
+                    m(x+1, y)
                 }
-                if (y < yCPU-1) tryMoveTo(x, y+1)
+                if (y < yCPU-1) m(x, y+1)
                 if (willMissilesHit()) fireMissiles()
                 move(x, y) // wait
             } else {
@@ -239,9 +240,10 @@ normalActions = function() {
 
     // If we don't see anything, then move towards the CPU
     if (!exists(closestEnemy)) {
-        tryMoveTo(x+1, y)
-        if (y > yCPU) tryMoveTo(x, y-1)
-        else tryMoveTo(x, y+1)
+        if (canShield()) shield()
+        m(x+1, y)
+        if (y > yCPU) m(x, y-1)
+        else m(x, y+1)
     }
 
     // If we can see at least one enemy bot somewhere
@@ -266,27 +268,29 @@ normalActions = function() {
             }
 
         }
+
         // Maybe lure enemy into mine that we are standing on //TODO break cardinality here or not? // TODO should we maybeDodge before mineLaying and mineLuring?
         if (currDistToClosestBot <= 1) {
 
             if (probablyStandingOnMine()) {
                 if (x == xe + 1) {
-                    tryMoveTo(x + 1, y)
+                    m(x + 1, y)
                 }
                 if (x == xe - 1) {
-                    tryMoveTo(x - 1, y)
+                    m(x - 1, y)
                 }
                 if (y == ye + 1) {
-                    tryMoveTo(x, y + 1)
+                    m(x, y + 1)
                 }
                 if (y == ye - 1) {
-                    tryMoveTo(x, y - 1)
+                    m(x, y - 1)
                 }
                 // else desired direction is blocked
             }
         }
 
         maybeDodge()
+        if (canShield()) shield()
 
         if (!REPAIR_AVAILABLE) {
             // Alternate between reflect and cloak, with a priority on reflecting.
@@ -322,6 +326,7 @@ normalActions = function() {
 
     // If we can see enemy chip or cpu, but no bot
     maybeDodge()
+    if (canShield()) shield()
     if (willMissilesHit()) {
         fireMissiles();
     }
