@@ -8,7 +8,7 @@ init = function() {
 update = function() {
     commonStateUpdates()
 
-    if (turn > 10) move('right')
+    if (turn > 15) move('right')
 
     if (canShield()) {
         array1 = findEntities(IS_OWNED_BY_ME, BOT, false)
@@ -19,7 +19,12 @@ update = function() {
                 if (canShield(array1[i])) shield(array1[i])
             }
         }
-        shield()
+        for (i = 0; i < size(array1); i++) {
+            fx = getX(array1[i])
+            fy = getY(array1[i])
+            if (canShield(array1[i])) shield(array1[i])
+        }
+        //shield()
     }
     if (canReflect()) {
         reflect();
