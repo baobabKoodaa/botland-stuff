@@ -57,13 +57,14 @@ normalActions = function() {
     if (reflectAllowed() && currDistToClosestBot <= 5) {
         reflect()
     }
-    if (canActivateSensors() && currDistToClosestBot > 5 && prevDistToClosestBot <= 5) {
+    maybeFire()
+
+    if (!areSensorsActivated() && canActivateSensors()) {
         activateSensors()
     }
 
-    maybeFire()
     maybeMoveTowardsCPU()
-    //TODO fallback?
+    thisShouldNeverExecute()
 }
 
 /******************************************************************** Main AI ********************************************************************/
@@ -109,7 +110,7 @@ maybeFire = function() {
 
 moveIfSafe = function(cx, cy) {
     if (isLocationHot(cx, cy)) return;
-    tryMoveTo(cx, cy);
+    m(cx, cy);
 }
 
 maybeMoveTowardsCPU = function() {
