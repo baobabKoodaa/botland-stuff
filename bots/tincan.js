@@ -1,9 +1,14 @@
+//!import state
+//!import utils
+
 init = function() {
 
-    SENSORS_ALLOWED_FROM_TURN = 1;
-    TELEPORT_ALLOWED_FROM_TURN = 2;
-    REFLECT_ALLOWED_FROM_TURN = 1;
-    ZAP_ALLOWED_FROM_TURN = 1;
+    SENSORS_ALLOWED_FROM_TURN = 1
+    TELEPORT_ALLOWED_FROM_TURN = 1
+    REFLECT_ALLOWED_FROM_TURN = 1
+    ZAP_ALLOWED_FROM_TURN = 1
+    OFFENSIVE_TELEPORT_ALLOWED = 1
+    ALTERNATE_REFLECT_CLOAK = 1
 
     commonInitProcedures();
 };
@@ -12,21 +17,127 @@ update = function() {
 
     commonStateUpdates()
 
+    //startSpecialRonBait()
+    //startSpecialDarklingArcher()
+
     target = chooseTarget();
     if (exists(target)) fight(target)
     else goAfterCPUandChips()
 }
 
+startSpecialDarklingArcher = function() {
+    if (turn == 1) layMine()
+    if (turn == 2) {
+        if (x >= 6) {
+            tryTeleport(2, 5)
+            tryTeleport(2, 6)
+            tryTeleport(2, 7)
+        }
+        m(x-1, y)
+    }
+    if (turn <= 7) {
+        if (canReflect()) {
+            // Reflect if needed
+            if (getEntityAt(x+3, y) || getEntityAt(x+4, y) || getEntityAt(x+5, y)) {
+                reflect()
+            }
+        }
+        if (x > 0) {
+            // Minelure
+            if (canLayMine()) {
+                layMine()
+            } else {
+                m(x-1, y)
+            }
+        }
+    }
+}
+
+startSpecialRonBait = function() {
+    if (turn <= 3) wait()
+    if (turn <= 5) m(x+1, y)
+}
+
+refcanSpecial = function() {
+    if (!isReflecting() && !canTeleport() && !canReflect()) {
+        target = chooseTarget();
+        if (exists(target)) fight(target)
+        wait()
+    }
+    if (canReflect()) {
+        reflect()
+    }
+    if (isReflecting()) {
+        target = chooseTarget();
+        if (exists(target)) fight(target)
+        else goAfterCPUandChips()
+    }
+    if (!isReflecting() && canTeleport()) {
+        tryTeleport(x-5, y)
+        tryTeleport(x-4, y-1)
+        tryTeleport(x-4, y+1)
+        tryTeleport(x-3, y-2)
+        tryTeleport(x-3, y+2)
+        tryTeleport(x-4, y)
+        tryTeleport(x-3, y)
+    }
+}
+
+startSpecialWaitCan = function() {
+    if (turn == 1) wait()
+    if (turn <= 3) m(x-1, y)
+    if (turn == 4) activateSensors()
+    if (turn == 5) reflect()
+    if (turn == 6) zap()
+}
+
+startSpecialKaiznn = function() {
+    if (turn == 1) reflect()
+    if (turn == 2) m(x+1, y)
+    if (turn <= 5) m(x-1, y)
+}
+
+startSpecialRonThing = function() {
+    if (turn == 1) reflect()
+    if (turn == 2) m(x+1, y)
+    if (turn == 3) {
+        if (x >= xCPU-5) {
+            zap()
+        } else {
+            wait()
+        }
+    }
+    if (turn == 4) {
+        if (x >= xCPU-5) {
+            tryTeleport(xCPU-1, y)
+            tryTeleport(xCPU-1, y-1)
+            tryTeleport(xCPU-1, y+1)
+            tryTeleport(xCPU-2, y+1)
+            tryTeleport(xCPU-2, y-1)
+            probablyTeleportToBestOffensiveTeleportLocation()
+        } else {
+            wait()
+        }
+    }
+    if (turn <= 6 && x < xCPU-5) {
+        m(x-1, y)
+    }
+    if (turn == 7 && x < xCPU-5) {
+        wait()
+    }
+}
+
 fight = function() {
-    maybeFinishOff(target);
-    if (reflectAllowed()) reflect();
+    maybeFinishOff(target)
+    if (reflectAllowed()) reflect()
+    if (ALTERNATE_REFLECT_CLOAK && !isReflecting() && canCloak()) cloak()
     maybeZap(target);
     maybeTeleportIntoEnemies(target);
 
     if (willMeleeHit(target)) {
         melee(target);
     }
-    moveTo(target); // TODO try to gain cardinality to charge?
+    m(target); // TODO try to gain cardinality to charge?
 }
 
 goAfterCPUandChips = function() {
@@ -107,7 +218,7 @@ maybeFinishOff = function(target) {
 
 maybeZap = function(target) {
     if (zapAllowed() && canZap() && life > 1100) {
-        if (distanceTo(target) <= 2) {
+        if (distanceTo(target) <= 3) {
             zap();
         }
         if (distanceTo(target) <= 5 && canTeleport()) {
@@ -148,7 +259,7 @@ probablyTeleportToBestOffensiveTeleportLocation = function() {
             }
         }
     }
-    if (bestScore >= 1000) teleport(bestX, bestY);
+    if (bestScore >= 1000) tryTeleport(bestX, bestY);
 }
 
 maybeTeleportIntoEnemies = function(target) {
@@ -156,7 +267,7 @@ maybeTeleportIntoEnemies = function(target) {
         // Do not teleport without zap!
         return;
     }
-    if (teleportAllowed() && canTeleport() && distanceTo(target) >= 3 && distanceTo(target) <= 5) {
+    if (OFFENSIVE_TELEPORT_ALLOWED && teleportAllowed() && canTeleport() && distanceTo(target) >= 3 && distanceTo(target) <= 5) {
         probablyTeleportToBestOffensiveTeleportLocation();
     }
 }
