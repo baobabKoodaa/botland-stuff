@@ -92,13 +92,14 @@ probablyDodge = function() {
     scoreRight = scoreDodgeLocation(x+1, y) - actionCost;
     scoreCurrent = scoreDodgeLocation(x, y); // No actionCost here, because if we stay, we get to act.
 
-    debugLog('T' + turn + ' x' + x + ' y' + y + ' u' + scoreUp + ' d' + scoreDown + ' l' + scoreLeft + ' r' + scoreRight + ' c' + scoreCurrent + '');
+    //debugLog('T' + turn + ' x' + x + ' y' + y + ' u' + scoreUp + ' d' + scoreDown + ' l' + scoreLeft + ' r' + scoreRight + ' c' + scoreCurrent + '');
 
     // Choose best score, break ties with a directional preference: vertical > left > right
     scoreBest = max(scoreCurrent, scoreUp, scoreDown, scoreLeft, scoreRight)
-    if (scoreUp == scoreBest) tryMoveTo(x, y-1)
-    if (scoreDown == scoreBest) tryMoveTo(x, y+1)
-    if (scoreLeft == scoreBest) tryMoveTo(x-1, y)
-    if (scoreRight == scoreBest) tryMoveTo(x+1, y)
+    if (scoreUp == scoreBest) m(x, y-1)
+    if (scoreDown == scoreBest) m(x, y+1)
+    if (scoreLeft == scoreBest) m(x-1, y)
+    if (scoreRight == scoreBest) m(x+1, y)
     // when scoreCurrent is best we fall through
+
 }

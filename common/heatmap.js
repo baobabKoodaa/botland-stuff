@@ -16,6 +16,8 @@ initializeHeatmap = function() {
 }
 
 findTileIndexFromHeatmap = function(cx, cy) {
+
+    // TODO optimize order of lookups by iterating from current pointer backwards (remember reverse overflow)
     for (i=1; i<=70; i+=4) {
         hx = array2[i+1];
         hy = array2[i+2];

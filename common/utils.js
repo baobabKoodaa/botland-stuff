@@ -28,6 +28,7 @@ canActuallyTeleport = function(cx, cy) {
 tryTeleport = function(cx, cy) {
     if (canActuallyTeleport(cx, cy)) {
         lastMoveTurn = turn
+        lastTeleportTurn = turn
         teleport(cx, cy)
     }
 }
@@ -53,6 +54,23 @@ m = function(cx, cy) {
         lastMoveTurn = turn
         moveTo(cx, cy)
     }
+}
+
+tryToRepairSomeoneWithoutMoving = function() {
+    if (willRepair()) {
+        if (life < 1900) repair()
+        repairIfNeeded(x+1, y)
+        repairIfNeeded(x-1, y)
+        repairIfNeeded(x, y+1)
+        repairIfNeeded(x, y-1)
+    }
+}
+
+repairIfNeeded = function(cx, cy) {
+    repairTarget = getEntityAt(cx, cy)
+    if (!exists(repairTarget)) return
+    if (getLife(repairTarget) < 1900) repair(repairTarget)
+    // TODO make sure it's a friendly
 }
 
 inMeleeOrEnemyEnclosing = function() {

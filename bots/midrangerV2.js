@@ -5,7 +5,7 @@
 
 
 // Coordinated attack -> retreat waves with coordinated targeting.
-// Loadout: missile3, tele2, repair2
+// Loadout: missile3, tele2, repair2/shield2
 
 init = function() {
 
@@ -232,8 +232,6 @@ removeSharedTarget = function() {
     sharedE = -1
 }
 
-// TODO shield instead of repair?
-
 determineSafetyThreshold = function() {
     defaultSafetyThreshold = 300
     if (someoneNeedsRepair()) defaultSafetyThreshold = 500
@@ -370,15 +368,7 @@ moveCloserOrSomething = function(ex, ey) {
     }
 
     // We can't move towards target, we can't fire.
-    repairOrWait()
-}
-
-repairOrWait = function() {
-    if (willRepair()) repair()
-    if (willRepair(getEntityAt(x+1, y))) repair()
-    if (willRepair(getEntityAt(x-1, y))) repair()
-    if (willRepair(getEntityAt(x, y+1))) repair()
-    if (willRepair(getEntityAt(x, y-1))) repair()
+    tryToRepairSomeoneWithoutMoving()
     wait()
 }
 

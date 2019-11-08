@@ -18,8 +18,12 @@ update = function() {
     //startSpecialMoveThreeCloakMoveThreeTele()
     //startSpecialCloakMoveThreeTele()
     startSpecialReflectTele()
+    //startSpecialCloakTele()
+    //startSpecialCloakTeleReflect()
     //startSpecialTeleCloak()
-    //startSpecialSlowRush()
+    //startSpecialSlowRush(8)
+    //startSpecialCloakMoveToGoal()
+    //startSpecialCraiton()
 
     // Set target ex,ey.
     ex = xCPU
@@ -43,11 +47,11 @@ update = function() {
         if (goalX > 0) {
             // A movement goal has been set. Move towards the goal until we hit it.
             if (x != goalX || y != goalY) {
-                tryMoveTo(goalX, goalY)
+                m(goalX, goalY)
                 // Fallback (tile is probably occupied)
                 initGoalToNothing()
                 setNewGoal()
-                tryMoveTo(goalX, goalY)
+                m(goalX, goalY)
             }
         }
     }
@@ -64,15 +68,16 @@ update = function() {
         dy = abs(y - ey)
         if (dx+dy > 5) {
             // Need to move closer.
-            if (x < ex) tryMoveTo(x+1, y)
-            if (y < ey) tryMoveTo(x, y+1)
-            if (y > ey) tryMoveTo(x, y-1)
-            if (x < ex+1) tryMoveTo(x+1, y) // Right edge of map is a good place to be.
+            if (x < ex) m(x+1, y)
+            if (y < ey) m(x, y+1)
+            if (y > ey) m(x, y-1)
+            if (x < ex+1) m(x+1, y) // Right edge of map is a good place to be.
+            if (x > ex) m(x-1, y)
         } else if (dx+dy < 5) {
             // Need to move further
-            if (x > ex) tryMoveTo(x+1, y)
-            if (y > ey) tryMoveTo(x, y+1)
-            if (y < ey) tryMoveTo(x, y-1)
+            if (x > ex) m(x+1, y)
+            if (y > ey) m(x, y+1)
+            if (y < ey) m(x, y-1)
         } else {
             thisShouldNeverExecute()
         }
@@ -81,12 +86,11 @@ update = function() {
     fireArtillery(target)
 }
 
-startSpecialSlowRush = function() {
-    cloakTurn = 5
+startSpecialSlowRush = function(cloakTurn) {
     if (turn == cloakTurn && canCloak() && !isCloaked()) {
         cloak()
     }
-    if (turn <= cloakTurn+3) tryMoveTo(x+1, y)
+    if (turn <= cloakTurn+3) m(x+1, y)
     if (turn == cloakTurn+4) {
         tryTeleport(x+5, y)
         tryTeleport(x+4, y+1)
@@ -94,6 +98,26 @@ startSpecialSlowRush = function() {
         tryTeleport(x+3, y+2)
         tryTeleport(x+3, y-2)
     }
+}
+
+startSpecialCraiton = function() {
+    if (x < 6) {
+        if (!areSensorsActivated()) {
+            if (canActivateSensors()) {
+                if (canShield()) shield()
+                activateSensors()
+            }
+            wait()
+        }
+        if (areSensorsActivated()) m(x+1, y)
+    }
+    if (x == 6) {
+        cpu = getEntityAt(xCPU, yCPU)
+        if (exists(cpu) && willArtilleryHit(cpu)) fireArtillery(cpu)
+        m(x-1, y)
+    }
+
+    thisShouldNeverExecute()
 }
 
 setNewGoal = function() {
@@ -131,9 +155,9 @@ tryToSetGoal = function(cx, cy) {
 
 startSpecialCloakMoveThreeTele = function() {
     if (turn == 1) cloak()
-    if (turn == 2) tryMoveTo(x+1, y)
-    if (turn == 3) tryMoveTo(x+1, y)
-    if (turn == 4) tryMoveTo(x+1, y)
+    if (turn == 2) m(x+1, y)
+    if (turn == 3) m(x+1, y)
+    if (turn == 4) m(x+1, y)
     if (turn == 5) {
         tryTeleport(x+5, y)
         tryTeleport(x+4, y+1)
@@ -144,13 +168,13 @@ startSpecialCloakMoveThreeTele = function() {
 }
 
 startSpecialMoveThreeCloakMoveThreeTele = function() {
-    if (turn == 1) tryMoveTo(x+1, y)
-    if (turn == 2) tryMoveTo(x+1, y)
-    if (turn == 3) tryMoveTo(x+1, y)
+    if (turn == 1) m(x+1, y)
+    if (turn == 2) m(x+1, y)
+    if (turn == 3) m(x+1, y)
     if (turn == 4) cloak()
-    if (turn == 5) tryMoveTo(x+1, y)
-    if (turn == 6) tryMoveTo(x+1, y)
-    if (turn == 7) tryMoveTo(x+1, y)
+    if (turn == 5) m(x+1, y)
+    if (turn == 6) m(x+1, y)
+    if (turn == 7) m(x+1, y)
     if (turn == 8) {
         tryTeleport(x+5, y)
         tryTeleport(x+4, y+1)
@@ -171,6 +195,22 @@ startSpecialReflectTele = function() {
     }
 }
 
+startSpecialCloakTele = function() {
+    if (turn == 1 && canCloak()) cloak()
+    if (turn <= 2) {
+        tryTeleport(x+5, y)
+        tryTeleport(x+4, y+1)
+        tryTeleport(x+4, y-1)
+        tryTeleport(x+3, y+2)
+        tryTeleport(x+3, y-2)
+    }
+}
+
+startSpecialCloakTeleReflect = function() {
+    startSpecialCloakTele()
+    if (turn <= 3 && canReflect()) reflect()
+}
+
 startSpecialTeleCloak = function() {
     if (turn == 1) {
         tryTeleport(x+5, y)
@@ -182,17 +222,37 @@ startSpecialTeleCloak = function() {
     if (turn == 2 && canCloak()) cloak()
 }
 
+startSpecialCloakMoveToGoal = function() {
+    if (turn == 1 && canCloak()) cloak()
+    if (turn == 2) {
+        tryToSetGoal(xCPU, yCPU-5)
+        tryToSetGoal(xCPU, yCPU+5)
+    }
+}
+
 getArtyTarget = function() {
     if (KILL_REPAIRERS) {
+        // First prefer repairers that we can hit
         option = getEntityAt(xCPU-1, yCPU)
         if (exists(option) && willArtilleryHit(option)) return option
         option = getEntityAt(xCPU, yCPU-1)
         if (exists(option) && willArtilleryHit(option)) return option
         option = getEntityAt(xCPU, yCPU+1)
         if (exists(option) && willArtilleryHit(option)) return option
+        option = getEntityAt(xCPU+1, yCPU)
+        if (exists(option) && willArtilleryHit(option)) return option
+        // Any repairer will do
+        option = getEntityAt(xCPU-1, yCPU)
+        if (exists(option)) return option
+        option = getEntityAt(xCPU, yCPU-1)
+        if (exists(option)) return option
+        option = getEntityAt(xCPU, yCPU+1)
+        if (exists(option)) return option
+        option = getEntityAt(xCPU+1, yCPU)
+        if (exists(option)) return option
     }
     cpu = getEntityAt(xCPU, yCPU)
-    if (exists(cpu) && willArtilleryHit(cpu)) return cpu
+    if (exists(cpu)) return cpu
     return null
 }
 

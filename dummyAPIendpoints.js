@@ -4,6 +4,7 @@
 
 abs = function() {}
 activateSensors = function() {}
+areSensorsActivated = function() {}
 canActivateSensors = function() {}
 canCloak = function() {}
 canEmp = function() {}
