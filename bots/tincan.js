@@ -19,10 +19,73 @@ update = function() {
 
     //startSpecialRonBait()
     //startSpecialDarklingArcher()
+    //startSpecialJuanjoBait()
+    startSpecialNobleSoul()
 
     target = chooseTarget();
     if (exists(target)) fight(target)
     else goAfterCPUandChips()
+}
+
+startSpecialJuanjoBait = function() {
+    if (turn == 1) wait()
+    if (turn <= 4) m(x-1, y)
+    if (turn <= 6) {
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+    }
+}
+
+startSpecialNobleSoul = function() {
+
+    MODE_MINES_FORWARD = 1
+    MODE_LET_THEM_COME = 2
+    MODE_NORMAL = 3
+    if (!mode) mode = MODE_MINES_FORWARD
+    if (turn > 20) mode = MODE_NORMAL // in case we fail to lure the enemy in
+    if (mode == MODE_NORMAL) return
+
+    if (mode == MODE_MINES_FORWARD) {
+        if (coordinatedTeleportTriggered()) {
+            mode = MODE_LET_THEM_COME
+            tryDefensiveTeleport()
+            thisShouldNeverExecute()
+        }
+        if (currDistToClosestBot <= 2) {
+            // Enemy zaps when they are at dist 2. We need to give them a chance to zap, so we stay at dist 2 for 1 turn and trigger teleport for next turn.
+            triggerCoordinatedTeleport()
+        }
+        if (canLayMine()) layMine()
+        moveIfNoMeleeCardinality(x+1, y)
+        wait()
+    }
+    if (mode == MODE_LET_THEM_COME) {
+        // TODO: kävellään ylös ihan yläseinälle jotta vihu kävelee miinakentän läpi ylös ja sit meillä on nätti rivistö odottamassa. koordinoi niin et kaikki saa oman y-slotin !!!!!!!!!!!!!!!!!!!!!
+        if (currDistToClosestBot <= 3 && canZap()) {
+            mode = MODE_NORMAL
+            zap()
+        }
+        wait()
+    }
+}
+
+tryDefensiveTeleport = function() {
+    // Only tele to 4 dist because we want the enemy to see us and walk through mines.
+    if (y <= arenaHeight/2) {
+        tryTeleport(x-3, y-1)
+        tryTeleport(x-4, y)
+        tryTeleport(x-2, y-2)
+        tryTeleport(x-3, y)
+        tryTeleport(x-1, y-3)
+        tryTeleport(x, y-4)
+    } else {
+        tryTeleport(x-3, y+1)
+        tryTeleport(x-4, y)
+        tryTeleport(x-2, y+2)
+        tryTeleport(x-3, y)
+        tryTeleport(x-1, y+3)
+        tryTeleport(x, y+4)
+    }
 }
 
 startSpecialDarklingArcher = function() {
@@ -54,8 +117,12 @@ startSpecialDarklingArcher = function() {
 }
 
 startSpecialRonBait = function() {
-    if (turn <= 3) wait()
-    if (turn <= 5) m(x+1, y)
+    if (turn <= 4) wait()
+    if (turn == 5) zap()
+    if (turn <= 7) {
+        if (willMeleeHit()) melee()
+        m(x+1, y)
+    }
 }
 
 refcanSpecial = function() {
