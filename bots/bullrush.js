@@ -1,3 +1,6 @@
+//!import state
+//!import utils
+
 init = function() {
     commonInitProcedures()
 }
@@ -6,6 +9,8 @@ update = function() {
     commonStateUpdates()
     cpu = findEntity(ENEMY, CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     closestBot = findEntity(ENEMY, BOT, SORT_BY_DISTANCE, SORT_ASCENDING);
+
+    startSpecialDarkLingBullRush()
 
     if (canReflect() && (cpu.life > 1100 || !willMeleeHit(cpu)) && distanceTo(closestBot) <= 4) {
         reflect();
@@ -33,4 +38,47 @@ update = function() {
     }
 
     // We should never be able to fallback this far.
-};
+}
+
+startSpecialDarkLingBullRush = function() {
+    if (turn == 1 && canCloak()) cloak()
+    if (turn <= 3) m(x+1, y)
+    if (turn == 4) {
+        tryTeleport(xCPU, yCPU-1)
+        tryTeleport(xCPU, yCPU+1)
+        tryTeleport(xCPU, yCPU-2)
+        tryTeleport(xCPU, yCPU+2)
+        tryTeleport(xCPU+1, yCPU-1)
+        tryTeleport(xCPU+1, yCPU+1)
+    }
+    if (canZap() && abs(y-yCPU) <= 1 && !isCloaked() && life > 600) {
+        zap()
+    }
+    if (canCloak() && !isZapping() && !isReflecting() && !isCloaked()) cloak()
+    if (turn <= 9) {
+        maybeMelee(xCPU, yCPU-1)
+        maybeMelee(xCPU, yCPU+1)
+        maybeMelee(xCPU-1, yCPU+1)
+        maybeMelee(xCPU-1, yCPU-1)
+        maybeMelee(xCPU+1, yCPU+1)
+        maybeMelee(xCPU+1, yCPU-1)
+        maybeMelee(xCPU, yCPU-2)
+        maybeMelee(xCPU, yCPU+2)
+    }
+    if (dmgTaken > 300) {
+        if (canReflect() && !isCloaked()) reflect()
+        tryTeleport(xCPU+1, yCPU)
+    }
+    if (willMeleeHit(cpu)) melee(cpu)
+    thisShouldNeverExecute()
+}
+
+maybeMelee = function(cx, cy) {
+    meleeTarget = getEntityAt(cx, cy)
+    if (!exists(meleeTarget)) return
+    if (!willMeleeHit(meleeTarget)) return
+    // No charging allowed except on CPU!
+    dx = abs(x-cx)
+    dy = abs(y-cy)
+    if (dx+dy == 1) melee(meleeTarget)
+}
