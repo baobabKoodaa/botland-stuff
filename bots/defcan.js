@@ -100,9 +100,9 @@ fight = function() {
     if (reflectAllowed() && currDistToClosestBot > 1) reflect()
     if (turn <= 4 && targetNearDanger(target)) {
         // move away from danger at start
-        if (x > getX(target)) tryMoveTo(x+1, y)
-        if (y > getY(target)) tryMoveTo(x, y+1)
-        if (y < getY(target)) tryMoveTo(x, y-1)
+        if (x > getX(target)) m(x+1, y)
+        if (y > getY(target)) m(x, y+1)
+        if (y < getY(target)) m(x, y-1)
     }
     maybeZap(target);
     maybeTeleportIntoEnemies(target);
