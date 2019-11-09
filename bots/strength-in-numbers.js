@@ -76,9 +76,9 @@ actR = function() {
         fallbackToSomethingUseful()
     }
     if (turn == 2) {
-        // TODO decloak enemies: if enemy was next to us on last turn, but has now disappeared, move into the square which was occupied by the enemy.
+        maybeTryToDecloakAdjacentEnemies()
 
-        // Typical case
+        // Typical case. TODO: check that we can actually teleport into battle, otherwise walk towards the fight
         if (canZap()) zap()
 
         // Fallback which happens if enemy EMP'd our zap or if cooldowns carry-over from previous round.
@@ -89,6 +89,16 @@ actR = function() {
         // Remember to use shared knowledge of enemy positions when choosing teleport target.
     }
 
+}
+
+maybeTryToDecloakAdjacentEnemies = function() {
+    // if enemy was next to us last turn, but has now disappeared, then move into the square which was occupied by the enemy.
+    enc = decloakHelper()
+    if (enc) {
+        ex = decodeX(enc)
+        ey = decodeY(enc)
+        m(ex, ey)
+    }
 }
 
 fallbackToSomethingUseful = function() {
@@ -102,7 +112,7 @@ actE = function() {
     countEnemiesInEmpRadius = countEnemyBotsWithinDist(x, y, 1, 5)
     if (turn == 1) {
         if (countEnemiesInEmpRadius >= 2 && canEmp()) {
-            // The most likely reason for having so many enemies close to the center at turn 1 is that they intend to zap.
+            // Why: because the most likely reason for having so many enemies close to the center at turn 1 is that they intend to zap.
             emp("ZAPPER")
         }
         // TODO if 3 enemies are in the middle, EMP(TELEPORT) immediately (all units will teleport immediately to fight them)

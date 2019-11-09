@@ -34,6 +34,34 @@ updateEnemyLocations = function() {
     }
 }
 
+decloakHelper = function() {
+    array2 = sharedB
+    for (i=MIN_ENEMY_LOCATION_INDEX; i<=MAX_ENEMY_LOCATION_INDEX; i+=1) {
+        enc = array2[i]
+        if (enc != 0) {
+            observationTurn = decodeTurn(enc)
+            if (observationTurn == turn-1) {
+                // We care about observations from last turn
+                ex = decodeX(enc)
+                ey = decodeY(enc)
+                if (getDistanceTo(ex, ey) == 1) {
+                    // We care about observations adjacent to us
+                    if (!getEntityAt(ex, ey)) {
+                        // Enemy was spotted there last turn, but this turn nothing is there.
+                        if (countEnemyBotsWithinDist(ex, ey, 1, 1) > 0) {
+                            // Maybe the enemy just moved one tile over.
+                        } else {
+                            // Enemy was there and now nothing is there or at adjacent tiles. Either the enemy died, teleported or cloaked.
+                            return enc
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return null
+}
+
 /************************** Shielding high level functions **********************************/
 
 /*
@@ -51,8 +79,7 @@ pollPrioritizedShieldWithinRange = function() {
     array2 = sharedB
     for (i=MIN_SHIELD_PRIO_INDEX; i<=MAX_SHIELD_PRIO_INDEX; i+=1) {
         enc = array2[i]
-        // Array2 may have empty/0/null/unknown values.
-        if (enc) {
+        if (enc != 0) {
             // Shield target may be out of our range.
             distToShieldTarget = abs(x - decodeX(enc)) + abs(y - decodeY(enc))
             if (distToShieldTarget <= 4) {
