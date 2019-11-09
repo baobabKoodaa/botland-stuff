@@ -12,6 +12,10 @@ initializeTracking = function() {
 
     if (!exists(sharedB)) {
         array2 = []
+        for (i=0; i<99; i++) {
+            // DO NOT REMOVE THIS!
+            array2[i] = 0
+        }
         array2[POINTER_NEXT_AVAILABLE_ENEMY_INDEX] = MIN_ENEMY_LOCATION_INDEX
         array2[POINTER_NEXT_AVAILABLE_SHIELD_INDEX] = MIN_SHIELD_PRIO_INDEX
         sharedB = array2
@@ -83,7 +87,7 @@ saveEncodedValue = function(enc, iPointer, iFirstVal, iLastVal) {
     // Value doesn't already exist; let's save it to next available location.
     iNextFree = array2[iPointer]
     array2[iNextFree] = enc
-    array2[iPointer] += 1
+    array2[iPointer] = array2[iPointer] + 1
     if (array2[iPointer] > iLastVal) array2[iPointer] = iFirstVal // overflow index to rewrite earlier entries next time
     sharedB = array2
 }
