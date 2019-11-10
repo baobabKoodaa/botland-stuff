@@ -1,3 +1,6 @@
+//!import state
+//!import utils
+
 init = function() {
 
     SENSORS_ALLOWED_FROM_TURN = 1;
@@ -17,10 +20,11 @@ init = function() {
 
 update = function() {
 
-    if (sharedA <= 7) {
-        // If at least 2 bots have died, disable left-swarm-in-the-beginning
-        sharedE = 13
-    }
+    //if (sharedA <= 7) {
+    //    // TODO fix this so it works even when sharedA no longer gives us this information
+    //    // If at least 2 bots have died, disable left-swarm-in-the-beginning
+    //    sharedE = 13
+    //}
 
     commonStateUpdates()
     updateStateOfRightMostKnownEnemy()

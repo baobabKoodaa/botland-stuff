@@ -1,6 +1,5 @@
 commonInitProcedures = function() {
-    initializeSharedVariables()
-    assignId()
+
     turn = 0
     currLife = 2000
     currDistToClosestBot = 999
@@ -16,6 +15,10 @@ commonInitProcedures = function() {
 
     xCPU = arenaWidth-2
     yCPU = (arenaHeight-1)/2
+
+    initializeSharedVariables()
+    assignId()
+    setAttackPriority(BOT_CPU_CHIP)
 }
 
 commonStateUpdates = function() {
@@ -30,12 +33,10 @@ commonStateUpdates = function() {
 }
 
 initializeSharedVariables = function() {
-    if (!exists(sharedA)) sharedA = 0 // Next free id
     // sharedB reserved for shared array2 (different use cases depending on bot)
 }
 assignId = function() {
-    id = sharedA
-    sharedA += 1
+    id = startX*100 + startY
 };
 
 probablyHasLandMines = function() {
