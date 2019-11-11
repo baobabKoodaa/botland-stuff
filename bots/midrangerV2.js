@@ -129,7 +129,6 @@ scoreTargetCandidate = function(targetCandidate) {
 
     // TODO scoring jossa otetaan järkevästi huomioon sekä etäisyys että helat (etäisyydessä _ei vain meihin etäisyys vaan kaikkiin friendlyihin_!)
     // TODO miten sais targetoitua chippejä huomioiden että getEntityAt ei osaa tunnistaa chippiä
-    // TODO sometimes lowest health target has escaped behind a wall of enemies. in that case we want to ditch it.
     // TODO scoring huomioi inferred reflectivity
 
     // Prefer low health enemies
@@ -208,18 +207,12 @@ chooseTarget = function() {
 }
 
 assignNewSharedTarget = function() {
-    bestTarget = chooseTarget() //was previously: bestTarget = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
+    bestTarget = chooseTarget()
     if (exists(bestTarget)) {
         ex = getX(bestTarget)
         ey = getY(bestTarget)
         sharedE = 100*ex + ey
     } else {
-
-        array1 = findEntities(ENEMY, BOT, false)
-        if (size(array1) > 0) {
-            debugLog("turn", turn, "failed to assign a target", x, y)
-        }
-
         removeSharedTarget()
     }
 }
@@ -270,6 +263,11 @@ shouldWeRetreat = function() {
     // TODO consider our own reflectors in some way?
 }
 
+guessIfWeAreBeingZapped = function() {
+    if (currDistToClosestBot <= 2 && dmgTaken > 100) return true
+    return false
+}
+
 coordinatedAttackWithDodging = function() {
 
     mode = MODE_ATTACK
@@ -280,7 +278,7 @@ coordinatedAttackWithDodging = function() {
     if (!weHaveSharedTarget()) {
         assignNewSharedTarget()
     }
-    if (countEnemyBotsWithMeleeCardinality(x, y) >= 1) {
+    if (countEnemyBotsWithMeleeCardinality(x, y) >= 1 || guessIfWeAreBeingZapped()) {
         // Try to step out of melee cardinality, fallback to offensive teleport
         tryMoveToIfSafe(x, y+1)
         tryMoveToIfSafe(x, y-1)
@@ -335,7 +333,8 @@ coordinatedAttackWithDodging = function() {
     else tryMoveToIfSafe(x, y+1)
 
     // Not safe to move
-    repairOrWait()
+    tryToRepairSomeoneWithoutMoving()
+    wait()
 }
 
 moveCloserOrSomething = function(ex, ey) {

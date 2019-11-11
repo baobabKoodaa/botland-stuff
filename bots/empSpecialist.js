@@ -8,6 +8,17 @@ init = function() {
 update = function() {
     commonStateUpdates()
 
+    //baitSpecial()
+
+    if (turn == 8 && canEmp()) emp('ZAPPER')
+    if (canReflect() && dmgTaken > 100 && currDistToClosestBot > 1) reflect()
+    if (willMissilesHit()) fireMissiles()
+    if (turn >= 2) {
+        m(x+1, y)
+    }
+}
+
+baitSpecial = function() {
     if (turn == 1 && canReflect()) reflect()
     if (currDistToClosestBot == 1 && canTeleport()) {
         tryTeleport(x-3, y-2)

@@ -4,8 +4,12 @@
 init = function() {
 
     KILL_REPAIRERS = 0
-    ALTERNATE_REFLECT_CLOAK = 1
-    DODGE_ARTILLERY = 0
+    ALTERNATE_REFLECT_CLOAK = 0
+    DODGE_ARTILLERY = 1
+
+    // These are needed for dodge position preference
+    firstXwhereWeShootCPU = null
+    firstYwhereWeShootCPU = null
 
     commonInitProcedures()
     initGoalToNothing()
@@ -17,11 +21,11 @@ update = function() {
 
     //startSpecialMoveThreeCloakMoveThreeTele()
     //startSpecialCloakMoveThreeTele()
-    startSpecialReflectTele()
+    //startSpecialReflectTele()
     //startSpecialCloakTele()
     //startSpecialCloakTeleReflect()
     //startSpecialTeleCloak()
-    //startSpecialSlowRush(8)
+    startSpecialSlowRush(7)
     //startSpecialCloakMoveToGoal()
     //startSpecialCraiton()
 
@@ -83,6 +87,10 @@ update = function() {
         }
     }
 
+    if (!firstXwhereWeShootCPU && getX(target) == xCPU && getY(target) == yCPU) {
+        firstXwhereWeShootCPU = x
+        firstYwhereWeShootCPU = y
+    }
     fireArtillery(target)
 }
 
@@ -121,6 +129,10 @@ startSpecialCraiton = function() {
 }
 
 setNewGoal = function() {
+    // Prefer
+    if (firstXwhereWeShootCPU && (x != firstXwhereWeShootCPU || y != firstYwhereWeShootCPU)) {
+        tryToSetGoal(firstXwhereWeShootCPU, firstYwhereWeShootCPU)
+    }
     // Normal goals at 2dist
     tryToSetGoal(x+2, y)
     tryToSetGoal(x+1, y+1)

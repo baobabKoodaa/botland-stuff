@@ -3,14 +3,37 @@
 
 init = function() {
 
-    SENSORS_ALLOWED_FROM_TURN = 1
     TELEPORT_ALLOWED_FROM_TURN = 1
     REFLECT_ALLOWED_FROM_TURN = 1
     ZAP_ALLOWED_FROM_TURN = 1
     OFFENSIVE_TELEPORT_ALLOWED = 1
     ALTERNATE_REFLECT_CLOAK = 1
+    SENSORS_ALLOWED_FROM_TURN = 999
+
+    // startSpecial forwmine modes
+    MODE_MINES_FORWARD = 1
+    MODE_LURE_THEM_IN = 2
+    MODE_NORMAL = 3
+
+    // hitnrun related
+    MODE_FIND_TARGET = 1
+    MODE_GANK = 2
+    MODE_RETREAT_REPAIR = 3
+    REPAIR_AVAILABLE = 1
+    REPAIR_X = 1
+    REPAIR_Y = 1
 
     commonInitProcedures();
+
+    // sharedA reserved for [HITANDRUN] when an enemy was last seen near repair station
+    // sharedB reserved for general purpose shared array
+    // sharedC reserved for
+    //          [FORWMINES] coordinated teleport (turn when teleport was triggered; that turn + the next turn bots will try to teleport back)
+    //          [HITANDRUN] coordinated gank (turn when gank was triggered; bots will try to gank ONLY ON THE TURN AFTER THAT)
+    // sharedD reserved for
+    //          [FORWMINES] end-of-wait-lure
+    //          [HITANDRUN] turn when an ally last needed repair
+    // sharedE reserved for [HITANDRUN] shared target (x*100+y)
 };
 
 update = function() {
@@ -18,13 +41,504 @@ update = function() {
     commonStateUpdates()
 
     //startSpecialRonBait()
-    //startSpecialDarklingArcher()
+    //startSpecialDarklingArcher2()
     //startSpecialJuanjoBait()
-    startSpecialNobleSoul()
+    //startSpecialForwMines()
+    //startSpecialBackwmines()
+    //startSpecialAttackForwardEvenIfNoVisibility(1)
+    //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
-    target = chooseTarget();
+    startSpecialRon2()
+    if (turn < 100) hitAndRun()
+
+    normalActions()
+}
+
+normalActions = function() {
+    target = chooseTarget()
     if (exists(target)) fight(target)
     else goAfterCPUandChips()
+}
+
+/*************************************************** HIT AND RUN **********************************************************/
+
+hitAndRun = function() {
+    if (!mode) mode = MODE_FIND_TARGET
+    if (mode == MODE_FIND_TARGET) hitAndRunFindTarget()
+    if (mode == MODE_GANK) hitAndRunGank()
+    if (mode == MODE_RETREAT_REPAIR) hitAndRunRetreat()
+    thisShouldNeverExecute("a")
+}
+
+hitAndRunFindTarget = function() {
+    mode = MODE_FIND_TARGET
+    if (isGankTriggered()) {
+        // Someone triggered gank last turn.
+        hitAndRunGank()
+    }
+    if (!weHaveSharedTarget()) {
+        assignNewSharedTarget()
+    }
+    if (!weHaveSharedTarget()) {
+        // We have no shared target and we are unable to see any enemy bots.
+        moveAhead()
+    }
+    // We have shared target.
+    ex = getSharedTargetX()
+    ey = getSharedTargetY()
+    if (getDistanceTo(ex, ey) > 5) {
+        // We can't see the target tile, move closer to it.
+        moveCloser(ex, ey)
+        thisShouldNeverExecute("c")
+    }
+    // We can see the target tile, but target may have moved or new enemies may have appeared; refresh shared target.
+    assignNewSharedTarget()
+    if (!weHaveSharedTarget()) {
+        // Target has disappeared and no targets in sight.
+        clearSharedTarget()
+        moveAhead()
+    }
+    // Target may have been refreshed so we need to refresh these variables.
+    ex = getSharedTargetX()
+    ey = getSharedTargetY()
+    if (getDistanceTo(ex, ey) <= 2) {
+        // This shouldn't usually happen but the enemy might teleport to us, etc.
+        triggerGank()
+        hitAndRunGank()
+    }
+    if (allNearbyFriendliesCanTeleportToTarget(ex, ey)) {
+        triggerGank()
+    }
+    if (canReflect() && dmgTaken > 100) reflect()
+    // All tincans should try to maintain 4 dist to target.
+    dx = abs(x - ex) // These were overwritten by allNearbyFr... so we need to set them again
+    dy = abs(y - ey) // These were overwritten by allNearbyFr... so we need to set them again
+    if (dx+dy > 4) {
+        moveCloser(ex, ey)
+    } else if (dx+dy < 4) {
+        moveFurther(ex, ey)
+    } else if (dx+dy == 4) {
+        // Prevent deadlocks
+        move()
+    }
+    thisShouldNeverExecute("e")
+}
+
+moveAhead = function() {
+    // Can we kill chips or cpu?
+    chipOrCPU = findEntity(ENEMY, ANYTHING, SORT_BY_DISTANCE, SORT_ASCENDING)
+    if (exists(chipOrCPU)) {
+        if (willMeleeHit(chipOrCPU)) melee(chipOrCPU)
+        m(chipOrCPU)
+    }
+
+    // Move towards the CPU
+    if (x < xCPU-3) m(x+1, y)
+    if (y < yCPU) m(x, y+1)
+    if (y > yCPU) m(x, y-1)
+
+    thisShouldNeverExecute("b")
+}
+
+hitAndRunGank = function() {
+    mode = MODE_GANK
+    if (!weHaveSharedTarget()) {
+        // Someone has cleared shared target, we probably killed the enemy.
+        askAlliesToWaitForUsToRepair() // This is hacky.
+        hitAndRunRetreat()
+    }
+    // TODO escape early if we predict we're about to die
+    ex = getSharedTargetX()
+    ey = getSharedTargetY()
+    if (getDistanceTo(ex, ey) > 5) {
+        moveCloser(ex, ey)
+        thisShouldNeverExecute()
+    }
+    if (countEnemyBotsWithinDist(ex, ey, 0, 2) == 0) {
+        if (getDistanceTo(ex, ey) == 5) {
+            // Enemy probably just moved out of sight.
+            moveCloser(ex, ey)
+            thisShouldNeverExecute()
+        } else {
+            // We probably killed the enemy target since no enemy is near our previously set target. Run unless we are fighting some other enemy.
+            if (currDistToClosestBot >= 2) { // TODO need to consider minDistOfAnyFriendlyToAnyEnemy
+                clearSharedTarget()
+                askAlliesToWaitForUsToRepair() // This is a hack to prevent whipsaw where some bots need heal and others dont and the needing-heal-bots dont have a chance to say they need a heal before another bot thinks no-one needs heal.
+                hitAndRunRetreat()
+            } else {
+                // We are engaged with some other enemy, make it the new target.
+                assignNewSharedTarget()
+            }
+        }
+
+    }
+    // Refresh shared target because target may have moved (or we may have killed it but another target may be in the vicinity of the old target).
+    assignNewSharedTarget()
+    if (!weHaveSharedTarget()) {
+        // We have killed the target or it has cloaked, teleported, or moved out of range AND we see no other targets anywhere.
+        clearSharedTarget()
+        askAlliesToWaitForUsToRepair() // This is hacky.
+        hitAndRunRetreat()
+    }
+    // Need to refresh these variables
+    target = getSharedTargetEntity()
+    ex = getSharedTargetX()
+    ey = getSharedTargetY()
+    dx = abs(x - ex)
+    dy = abs(y - ey)
+    if (canReflect() && currDistToClosestBot >= 3) reflect()
+    if (canZap()) zap()
+    if (!willMeleeHit(target) && turn == coordinatedGankTeleportTurn()) {
+        // TODO if the target has moved backward, some of our tincans will be able to teleport to only some of the locations; we need to coordinate who teleports where so that we guarantee that all tincans will be able to teleport next to target.
+        tryTeleport(ex - 1, ey)
+        tryTeleport(ex, ey-1)
+        tryTeleport(ex, ey+1)
+        tryTeleport(ex+1, ey)
+        // Fallback if preferred tiles are occupied
+        tryTeleport(ex-1, ey-1)
+        tryTeleport(ex-1, ey+1)
+        tryTeleport(ex+1, ey-1)
+        tryTeleport(ex+1, ey+1)
+    }
+    if (willMeleeHit(target)) melee(target)
+    m(ex, ey)
+    thisShouldNeverExecute("f")
+}
+
+hitAndRunRetreat = function() {
+    mode = MODE_RETREAT_REPAIR
+    distToRepair = getDistanceTo(REPAIR_X, REPAIR_Y)
+    closestEnemy = findEntity(ENEMY, BOT, SORT_BY_DISTANCE, SORT_ASCENDING)
+    if ((exists(closestEnemy) && getX(closestEnemy) <= REPAIR_X+5) || (x <= REPAIR_X+1 && dmgTaken > 100)) {
+        // Repair interrupted if enemy is seen close to repair line _or_ we are taking damage at or behind repair line (from arty at 7 range probably)
+        tellAlliesEnemyNearRepairStation()
+    }
+    if (isEnemyNearRepairStation()) {
+        fightEnemyNearRepairStation()
+    }
+    if (!REPAIR_AVAILABLE) {
+        hitAndRunFindTarget()
+    }
+    if (currLife < 1900) {
+        askAlliesToWaitForUsToRepair()
+        if (distToRepair > 1) {
+            if (canCloak() && !isCloaked()) {
+                cloak()
+            }
+            if (canTeleport() && distToRepair > 5) {
+                // TODO teleport-towards-repair targets properly
+                tryTeleport(x-4, y-1)
+                tryTeleport(x-3, y-2)
+            }
+            // Try to move towards the 'corner' of repair-man
+            if (x > REPAIR_X+1) m(x-1, y)
+            if (x < REPAIR_X-1) m(x+1, y)
+            if (y > REPAIR_Y+1) m(x, y-1)
+            if (y < REPAIR_Y-1) m(x, y+1)
+            // Try to move next to the repair-man
+            if (x > REPAIR_X) m(x-1, y)
+            if (x < REPAIR_X) m(x+1, y)
+            if (y > REPAIR_Y) m(x, y-1)
+            if (y < REPAIR_Y) m(x, y+1)
+            // Fallback to random move in order to break deadlocks
+            move()
+        } else {
+            if (!getEntityAt(REPAIR_X, REPAIR_Y)) {
+                // Repair-man is dead
+                REPAIR_AVAILABLE = 0
+            }
+            wait()
+        }
+    } else if (someoneNeedsRepair()) {
+        if (distToRepair > 5) {
+            // Move towards repair-man
+            if (x > REPAIR_X) m(x-1, y)
+            if (y > REPAIR_Y) m(x, y-1)
+            if (y < REPAIR_Y) m(x, y+1)
+            if (x < REPAIR_X) m(x+1, y)
+        } else if (x != REPAIR_X + 1 || y > REPAIR_Y + 4) {
+            // Move out of way so teammates can repair. Move into something loosely resembling a formation.
+            m(REPAIR_X + 1, REPAIR_Y + 3)
+            m(REPAIR_X + 1, REPAIR_Y + 2)
+            m(REPAIR_X + 1, REPAIR_Y + 4)
+            // Fallback
+            m(REPAIR_X+1, REPAIR_Y)
+            m(REPAIR_X, REPAIR_Y+1)
+            m(REPAIR_X, REPAIR_Y)
+        } else {
+            wait()
+        }
+    } else {
+        // We don't need more repair, our teammates don't need more repair. Assume our cooldowns are ok too.
+        hitAndRunFindTarget()
+    }
+    thisShouldNeverExecute("r")
+}
+
+moveCloser = function(cx, cy) {
+    if (getDistanceTo(cx, cy) > 5) {
+        // Has potential for deadlock
+        if (x < cx) m(x+1, y)
+        if (y < cy) m(x, y+1)
+        if (y > cy) m(x, y-1)
+        if (x > cx) m(x-1, y)
+    } else {
+        // Smarter pathfinding
+        m(cx, cy)
+    }
+    thisShouldNeverExecute("g")
+}
+
+moveFurther = function(cx, cy) {
+    if (x >= cx) m(x+1, y)
+    if (y >= cy) m(x, y+1)
+    if (y <= cy) m(x, y-1)
+    if (x <= cx) m(x-1, y)
+    // Fallback
+    if (canReflect()) reflect()
+    if (canZap()) zap()
+    if (willMeleeHit()) melee()
+    wait()
+}
+
+minFriendlyDistToEnemy = function() {
+
+}
+
+isGankTriggered = function() {
+    return sharedC == turn-1
+}
+
+triggerGank = function() {
+    sharedC = turn
+}
+
+coordinatedGankTeleportTurn = function() {
+    return sharedC + 3 // wait-for-all-to-have-equal-opportunity, ref, zap, tele == +3
+}
+
+scoreTargetCandidate = function(targetCandidate) {
+    scoreTCTotal = 0
+
+    // Mainly choose the enemy which is closest to our bots
+    ex = getX(targetCandidate)
+    ey = getY(targetCandidate)
+    scoreTCTotal += scoreTargetDist(ex, ey, f0x, f0y)
+    scoreTCTotal += scoreTargetDist(ex, ey, f1x, f1y)
+    scoreTCTotal += scoreTargetDist(ex, ey, f2x, f2y)
+    scoreTCTotal += scoreTargetDist(ex, ey, f3x, f3y)
+
+    // Break ties by choosing the lowest health enemy
+    scoreTCTotal += getLife(targetCandidate)
+
+    return scoreTCTotal
+}
+
+scoreTargetDist = function(ex, ey, fnx, fny) {
+    if (fnx >= 0) { // May be undefined!
+        dx = abs(ex - fnx)
+        dy = abs(ey - fny)
+        scoreTCDist = 1000*(dx+dy)
+        return scoreTCDist
+    }
+    // If this friendly bot doesn't exist, all candidates will be affected the same way regardless if this value is 0 or something else.
+    return 0
+}
+
+refreshAllyPositions = function() {
+    // Variables f0x,f0y,f1x,f1y,f2x,f2y,f3x,f3y will hold positions for nearby allies including self. Refreshed as needed.
+    array1 = findEntities(IS_OWNED_BY_ME, BOT, true)
+    // Clear out any stale values.
+    f0x = -1
+    f0y = -1
+    f1x = -1
+    f1y = -1
+    f2x = -1
+    f2y = -1
+    f3x = -1
+    f3y = -1
+    // Assign new values
+    if (size(array1) > 0) {
+        f0x = getX(array1[0])
+        f0y = getY(array1[0])
+    }
+    if (size(array1) > 1) {
+        f1x = getX(array1[1])
+        f1y = getY(array1[1])
+    }
+    if (size(array1) > 2) {
+        f2x = getX(array1[2])
+        f2y = getY(array1[2])
+    }
+    if (size(array1) > 3) {
+        f3x = getX(array1[3])
+        f3y = getY(array1[3])
+    }
+}
+
+chooseTarget = function() {
+    bestTarget = null
+    bestTargetCandidateScore = 1000000000
+
+    // Find nearby allied bots. This is hacky, because we need to find both allied and enemy bots, but we can only use array1!
+    refreshAllyPositions()
+
+    array1 = findEntities(ENEMY, BOT, false)
+    for (i = 0; i < size(array1); i++) {
+        targetCandidateScore = scoreTargetCandidate(array1[i])
+        if (targetCandidateScore < bestTargetCandidateScore) {
+            bestTargetCandidateScore = targetCandidateScore
+            bestTarget = array1[i]
+        }
+    }
+    return bestTarget
+}
+
+assignNewSharedTarget = function() {
+    bestTarget = chooseTarget()
+    if (exists(bestTarget)) {
+        ex = getX(bestTarget)
+        ey = getY(bestTarget)
+        setSharedTarget(ex, ey)
+    } else {
+        clearSharedTarget()
+    }
+}
+
+clearSharedTarget = function() {
+    sharedE = null
+}
+
+weHaveSharedTarget = function() {
+    return exists(sharedE)
+}
+
+setSharedTarget = function(ex, ey) {
+    sharedE = 100*ex + ey
+}
+
+getSharedTargetX = function() {
+    return floor(sharedE / 100)
+}
+
+getSharedTargetY = function() {
+    return sharedE % 100
+}
+
+getSharedTargetEntity = function() {
+    if (!exists(sharedE)) return null
+    return getEntityAt(getSharedTargetX(), getSharedTargetY())
+}
+
+allNearbyFriendliesCanTeleportToTarget = function(ex, ey) {
+    array1 = findEntities(IS_OWNED_BY_ME, BOT, true)
+    for (i = 0; i < size(array1); i++) {
+        fx = getX(array1[i])
+        fy = getY(array1[i])
+        if (fy >= y-2) {
+            // Friendlies further behind than this are probably repair/support units.
+            dx = abs(ex - fx)
+            dy = abs(ey - fy)
+            if (dx+dy > 4) {
+                // This could be 6, but we don't want to deal with edge cases so we set this at 5. Even this may cause us problematic edge cases sometimes.
+                return false
+            }
+        }
+    }
+    return true
+}
+
+someoneNeedsRepair = function() {
+    return (sharedD >= turn-1)
+}
+
+askAlliesToWaitForUsToRepair = function() {
+    sharedD = turn
+}
+
+isEnemyNearRepairStation = function() {
+    return sharedA >= turn-3
+}
+
+tellAlliesEnemyNearRepairStation = function() {
+    sharedA = turn
+}
+
+fightEnemyNearRepairStation = function() {
+    // Quick hack. TODO: properly.
+    normalActions()
+}
+
+/*************************************************** Various start specials **********************************************************/
+
+startSpecialRon2 = function() {
+    if (mode) return
+    if (turn <= 2) {
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+    }
+    if (turn <= 10) {
+        if (willMeleeHit()) melee()
+        mode = MODE_RETREAT_REPAIR
+        tryTeleport(x-5, y)
+        tryTeleport(x-4, y-1)
+        tryTeleport(x-3, y-2)
+        tryTeleport(x-4, y)
+    }
+}
+
+/*
+
+startSpecialAttackForwardEvenIfNoVisibility = function(movesToRight) {
+    if (!movesToRight) movesToRight = 0
+    if (turn <= movesToRight) m(x+1, y)
+    if (turn <= 4 + movesToRight) {
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+        tryTeleport(x+5, y)
+        probablyTeleportToBestOffensiveTeleportLocation()
+    }
+}
+
+startSpecialAttackVerticallyCenterEvenIfNoVisibility = function() {
+    if (turn <= 3) {
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+        tryTeleport(x, y+5)
+        tryTeleport(x, y-5)
+        tryTeleport(x+1, y-4)
+        tryTeleport(x-1, y-4)
+        tryTeleport(x+1, y+4)
+        tryTeleport(x-1, y+4)
+        probablyTeleportToBestOffensiveTeleportLocation()
+    }
+}
+
+startSpecialBackwmines = function() {
+    if (mode == MODE_NORMAL) {
+        return
+    }
+    if (haveAlliesSignalledNormalMode()) {
+        mode = MODE_NORMAL
+        if (!canLayMine()) {
+            m(x-1, y)
+        }
+        return
+    }
+    if (turn == REFLECT_ALLOWED_FROM_TURN) {
+        if (canReflect()) reflect()
+    }
+    if (turn < 10) {
+        if (currDistToClosestBot <= 2) {
+            signalAlliesNormalMode()
+            if (!canLayMine()) m(x-1, y)
+            mode = MODE_NORMAL
+            return
+        }
+        if (canLayMine()) layMine()
+        m(x-1, y)
+        wait()
+    }
 }
 
 startSpecialJuanjoBait = function() {
@@ -33,58 +547,6 @@ startSpecialJuanjoBait = function() {
     if (turn <= 6) {
         if (canReflect()) reflect()
         if (canZap()) zap()
-    }
-}
-
-startSpecialNobleSoul = function() {
-
-    MODE_MINES_FORWARD = 1
-    MODE_LET_THEM_COME = 2
-    MODE_NORMAL = 3
-    if (!mode) mode = MODE_MINES_FORWARD
-    if (turn > 20) mode = MODE_NORMAL // in case we fail to lure the enemy in
-    if (mode == MODE_NORMAL) return
-
-    if (mode == MODE_MINES_FORWARD) {
-        if (coordinatedTeleportTriggered()) {
-            mode = MODE_LET_THEM_COME
-            tryDefensiveTeleport()
-            thisShouldNeverExecute()
-        }
-        if (currDistToClosestBot <= 2) {
-            // Enemy zaps when they are at dist 2. We need to give them a chance to zap, so we stay at dist 2 for 1 turn and trigger teleport for next turn.
-            triggerCoordinatedTeleport()
-        }
-        if (canLayMine()) layMine()
-        moveIfNoMeleeCardinality(x+1, y)
-        wait()
-    }
-    if (mode == MODE_LET_THEM_COME) {
-        // TODO: kävellään ylös ihan yläseinälle jotta vihu kävelee miinakentän läpi ylös ja sit meillä on nätti rivistö odottamassa. koordinoi niin et kaikki saa oman y-slotin !!!!!!!!!!!!!!!!!!!!!
-        if (currDistToClosestBot <= 3 && canZap()) {
-            mode = MODE_NORMAL
-            zap()
-        }
-        wait()
-    }
-}
-
-tryDefensiveTeleport = function() {
-    // Only tele to 4 dist because we want the enemy to see us and walk through mines.
-    if (y <= arenaHeight/2) {
-        tryTeleport(x-3, y-1)
-        tryTeleport(x-4, y)
-        tryTeleport(x-2, y-2)
-        tryTeleport(x-3, y)
-        tryTeleport(x-1, y-3)
-        tryTeleport(x, y-4)
-    } else {
-        tryTeleport(x-3, y+1)
-        tryTeleport(x-4, y)
-        tryTeleport(x-2, y+2)
-        tryTeleport(x-3, y)
-        tryTeleport(x-1, y+3)
-        tryTeleport(x, y+4)
     }
 }
 
@@ -113,6 +575,26 @@ startSpecialDarklingArcher = function() {
                 m(x-1, y)
             }
         }
+    }
+}
+
+startSpecialDarklingArcher2 = function() {
+    if (currDistToClosestBot <= 2) return
+    if (turn == 1) {
+        if (y == 4) tryTeleport(x-4, y+1)
+        if (y == 6) tryTeleport(x-5, y)
+        if (y == 8) tryTeleport(x-4, y-1)
+    }
+    if (turn <= 3) {
+        if (getEntityAt(x+3, y) || getEntityAt(x+4, y) || getEntityAt(x+5, y)) {
+            reflect()
+        }
+        wait()
+    }
+    if (turn <= 7) {
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+        m(x+1, y)
     }
 }
 
@@ -194,6 +676,82 @@ startSpecialRonThing = function() {
     }
 }
 
+ */
+
+/*************************************************** FORWARD MINES **********************************************************/
+
+startSpecialForwMines = function() {
+
+    if (!mode) mode = MODE_MINES_FORWARD
+    if (turn > 20) mode = MODE_NORMAL // in case we fail to lure the enemy in
+    if (mode == MODE_NORMAL) return
+
+    if (mode == MODE_MINES_FORWARD) {
+        if (coordinatedTeleportTriggered()) {
+            mode = MODE_LURE_THEM_IN
+            tryTeleport(startX, startY)
+            tryTeleport(x-5, y)
+            tryDefensiveTeleport()
+            thisShouldNeverExecute("h")
+        }
+        if (currDistToClosestBot <= 3) {
+            triggerCoordinatedTeleport()
+        }
+        if (canLayMine()) layMine()
+        moveIfNoMeleeCardinality(x+1, y)
+        wait()
+    }
+    if (mode == MODE_LURE_THEM_IN) {
+        if (hasWaitLureEnded()) {
+            mode = MODE_NORMAL
+            signalAlliesNormalMode()
+            zap()
+        }
+        LURE_UP = true
+        if (LURE_UP) {
+            if (y > 0) {
+                if (currDistToClosestBot >= 4 && canLayMine()) layMine()
+                m(x, y-1)
+            }
+        }
+        wait()
+    }
+}
+
+hasWaitLureEnded = function() {
+    if (haveAlliesSignalledNormalMode()) return true
+    if (currDistToClosestBot <= 2 && canZap()) return true
+}
+
+haveAlliesSignalledNormalMode = function() {
+    return sharedD
+}
+
+signalAlliesNormalMode = function() {
+    sharedD = true
+}
+
+tryDefensiveTeleport = function() {
+    // Only tele to 4 dist because we want the enemy to see us and walk through mines.
+    if (y <= arenaHeight/2) {
+        tryTeleport(x-3, y-1)
+        tryTeleport(x-4, y)
+        tryTeleport(x-2, y-2)
+        tryTeleport(x-3, y)
+        tryTeleport(x-1, y-3)
+        tryTeleport(x, y-4)
+    } else {
+        tryTeleport(x-3, y+1)
+        tryTeleport(x-4, y)
+        tryTeleport(x-2, y+2)
+        tryTeleport(x-3, y)
+        tryTeleport(x-1, y+3)
+        tryTeleport(x, y+4)
+    }
+}
+
+/*************************************************** . **********************************************************/
+
 fight = function() {
     maybeFinishOff(target)
     if (reflectAllowed()) reflect()
@@ -210,11 +768,11 @@ fight = function() {
 goAfterCPUandChips = function() {
     target = findEntity(ENEMY, CHIP | CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     if (!exists(target)) {
-        maybeSensors();
-        moveTo(xCPU, yCPU);
+        maybeSensors()
+        moveTo(xCPU, yCPU)
     }
     if (willMeleeHit(target)) {
-        melee(target);
+        melee(target)
     }
     moveTo(target)
 }

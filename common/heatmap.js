@@ -10,6 +10,10 @@
 initializeHeatmap = function() {
     if (!exists(sharedB)) {
         array2 = []
+        for (i=0; i<99; i++) {
+            // DO NOT REMOVE THIS!
+            array2[i] = 0
+        }
         array2[0] = 1 // Next free index in heatmap.
         sharedB = array2
     }
