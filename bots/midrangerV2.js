@@ -54,7 +54,7 @@ update = function () {
         retreatAndRepair()
     }
 
-    thisShouldNeverExecute()
+    n()
 }
 
 retreatAndRepair = function() {
@@ -314,7 +314,7 @@ coordinatedAttackWithDodging = function() {
             } else if (getDistanceTo(ex, ey) > FIRING_DISTANCE) {
                 moveCloserOrSomething(ex, ey)
             } else {
-                thisShouldNeverExecute()
+                n()
             }
         }
     }
@@ -397,7 +397,7 @@ NFtryTeleportIfSafe = function(cx, cy) {
 
 tryOffensiveTeleport = function() {
     if (!canTeleport()) return
-    if (!weHaveSharedTarget()) thisShouldNeverExecute()
+    if (!weHaveSharedTarget()) n()
     // Try to maintain firing distance, avoid stepping on hot locations, minimize number of enemies in range
     ex = floor(sharedE / 100)
     ey = sharedE % 100

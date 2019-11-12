@@ -4,8 +4,8 @@
 init = function() {
 
     KILL_REPAIRERS = 0
-    ALTERNATE_REFLECT_CLOAK = 0
-    DODGE_ARTILLERY = 1
+    ALTERNATE_REFLECT_CLOAK = 1
+    DODGE_ARTILLERY = 0
 
     // These are needed for dodge position preference
     firstXwhereWeShootCPU = null
@@ -25,7 +25,7 @@ update = function() {
     //startSpecialCloakTele()
     //startSpecialCloakTeleReflect()
     //startSpecialTeleCloak()
-    startSpecialSlowRush(7)
+    startSpecialSlowRush(8)
     //startSpecialCloakMoveToGoal()
     //startSpecialCraiton()
 
@@ -83,7 +83,7 @@ update = function() {
             if (y > ey) m(x, y+1)
             if (y < ey) m(x, y-1)
         } else {
-            thisShouldNeverExecute()
+            n()
         }
     }
 
@@ -125,7 +125,7 @@ startSpecialCraiton = function() {
         m(x-1, y)
     }
 
-    thisShouldNeverExecute()
+    n()
 }
 
 setNewGoal = function() {

@@ -43,7 +43,7 @@ update = function() {
     //startSpecialRonBait()
     //startSpecialDarklingArcher2()
     //startSpecialJuanjoBait()
-    //startSpecialForwMines()
+    startSpecialForwMines()
     //startSpecialBackwmines()
     //startSpecialAttackForwardEvenIfNoVisibility(1)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
@@ -67,7 +67,7 @@ hitAndRun = function() {
     if (mode == MODE_FIND_TARGET) hitAndRunFindTarget()
     if (mode == MODE_GANK) hitAndRunGank()
     if (mode == MODE_RETREAT_REPAIR) hitAndRunRetreat()
-    thisShouldNeverExecute("a")
+    n("a")
 }
 
 hitAndRunFindTarget = function() {
@@ -89,7 +89,7 @@ hitAndRunFindTarget = function() {
     if (getDistanceTo(ex, ey) > 5) {
         // We can't see the target tile, move closer to it.
         moveCloser(ex, ey)
-        thisShouldNeverExecute("c")
+        n("c")
     }
     // We can see the target tile, but target may have moved or new enemies may have appeared; refresh shared target.
     assignNewSharedTarget()
@@ -121,7 +121,7 @@ hitAndRunFindTarget = function() {
         // Prevent deadlocks
         move()
     }
-    thisShouldNeverExecute("e")
+    n("e")
 }
 
 moveAsAGroup = function() {
@@ -151,7 +151,7 @@ moveAsAGroup = function() {
     if (y < yCPU) m(x, y+1)
     if (y > yCPU) m(x, y-1)
 
-    thisShouldNeverExecute("b")
+    n("b")
 }
 
 hitAndRunGank = function() {
@@ -171,13 +171,13 @@ hitAndRunGank = function() {
     ey = getSharedTargetY()
     if (getDistanceTo(ex, ey) > 5) {
         moveCloser(ex, ey)
-        thisShouldNeverExecute()
+        n()
     }
     if (countEnemyBotsWithinDist(ex, ey, 0, 2) == 0) {
         if (getDistanceTo(ex, ey) == 5) {
             // Enemy probably just moved out of sight.
             moveCloser(ex, ey)
-            thisShouldNeverExecute()
+            n()
         } else {
             // We probably killed the enemy target since no enemy is near our previously set target. Run unless we are fighting some other enemy.
             if (currDistToClosestBot >= 2) { // TODO need to consider minDistOfAnyFriendlyToAnyEnemy
@@ -221,7 +221,7 @@ hitAndRunGank = function() {
     }
     if (willMeleeHit(target)) melee(target)
     m(ex, ey)
-    thisShouldNeverExecute("f")
+    n("f")
 }
 
 hitAndRunRetreat = function() {
@@ -300,7 +300,7 @@ hitAndRunRetreat = function() {
         // We don't need more repair, our teammates don't need more repair. Assume our cooldowns are ok too.
         hitAndRunFindTarget()
     }
-    thisShouldNeverExecute("r")
+    n("r")
 }
 
 determineSafetyThreshold = function() {
@@ -348,7 +348,7 @@ moveCloser = function(cx, cy) {
         // Smarter pathfinding
         m(cx, cy)
     }
-    thisShouldNeverExecute("g")
+    n("g")
 }
 
 moveFurther = function(cx, cy) {
@@ -743,7 +743,7 @@ startSpecialRonThing = function() {
 
 /*************************************************** FORWARD MINES **********************************************************/
 
-/*
+
 startSpecialForwMines = function() {
 
     if (!mode) mode = MODE_MINES_FORWARD
@@ -757,7 +757,7 @@ startSpecialForwMines = function() {
         if (coordinatedTeleportTriggered()) {
             mode = MODE_LURE_THEM_IN
             tryDefensiveTeleport()
-            thisShouldNeverExecute("h")
+            n("h")
         }
         if (canLayMine()) layMine()
         moveIfNoMeleeCardinality(x+1, y)
@@ -805,7 +805,7 @@ tryDefensiveTeleport = function() {
     }
 }
 
-*/
+
 
 /*************************************************** . **********************************************************/
 

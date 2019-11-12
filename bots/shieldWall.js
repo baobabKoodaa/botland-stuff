@@ -9,7 +9,7 @@ update = function() {
     commonStateUpdates()
 
     // Start specials
-    //if (turn == 1 && canReflect()) reflect()
+    if (turn == 1 && canReflect()) reflect()
 
     // Normal actions
     if (countEnemyBotsWithMeleeCardinality(x, y) >= 1) {
@@ -50,7 +50,7 @@ update = function() {
         }
     }
 
-    thisShouldNeverExecute()
+    n()
 }
 
 mineLureRetreat = function() {
