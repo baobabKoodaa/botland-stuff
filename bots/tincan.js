@@ -48,7 +48,7 @@ update = function() {
     //startSpecialAttackForwardEvenIfNoVisibility(1)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
-    startSpecialRon2()
+    //startSpecialRon2()
     if (turn < 100) hitAndRun()
 
     normalActions()
@@ -81,7 +81,7 @@ hitAndRunFindTarget = function() {
     }
     if (!weHaveSharedTarget()) {
         // We have no shared target and we are unable to see any enemy bots.
-        moveAhead()
+        moveAsAGroup()
     }
     // We have shared target.
     ex = getSharedTargetX()
@@ -96,7 +96,7 @@ hitAndRunFindTarget = function() {
     if (!weHaveSharedTarget()) {
         // Target has disappeared and no targets in sight.
         clearSharedTarget()
-        moveAhead()
+        moveAsAGroup()
     }
     // Target may have been refreshed so we need to refresh these variables.
     ex = getSharedTargetX()
@@ -124,7 +124,21 @@ hitAndRunFindTarget = function() {
     thisShouldNeverExecute("e")
 }
 
-moveAhead = function() {
+moveAsAGroup = function() {
+    // If we are far from nearest friendly, get closer.
+    closestAlly = findClosestAlliedBot()
+    if (exists(closestAlly)) {
+        fnx = getX(closestAlly)
+        fny = getY(closestAlly)
+        if (getDistanceTo(fnx, fny) >= 3) {
+            // Distance 3 from nearest friendly considered to be far.
+            if (fny != REPAIR_Y || fnx != REPAIR_X) {
+                // If nearest ally is not the repairman, move closer.
+                m(fnx, fny)
+            }
+        }
+    }
+
     // Can we kill chips or cpu?
     chipOrCPU = findEntity(ENEMY, ANYTHING, SORT_BY_DISTANCE, SORT_ASCENDING)
     if (exists(chipOrCPU)) {
@@ -147,7 +161,12 @@ hitAndRunGank = function() {
         askAlliesToWaitForUsToRepair() // This is hacky.
         hitAndRunRetreat()
     }
-    // TODO escape early if we predict we're about to die
+    if (shouldWeRetreat()) {
+        // Escape early if we predict we're about to die
+        askAlliesToWaitForUsToRepair() // This is hacky.
+        hitAndRunRetreat()
+    }
+
     ex = getSharedTargetX()
     ey = getSharedTargetY()
     if (getDistanceTo(ex, ey) > 5) {
@@ -252,11 +271,20 @@ hitAndRunRetreat = function() {
     } else if (someoneNeedsRepair()) {
         if (distToRepair > 5) {
             // Move towards repair-man
+            if (canCloak() && !isCloaked()) cloak()
             if (x > REPAIR_X) m(x-1, y)
             if (y > REPAIR_Y) m(x, y-1)
             if (y < REPAIR_Y) m(x, y+1)
             if (x < REPAIR_X) m(x+1, y)
         } else if (x != REPAIR_X + 1 || y > REPAIR_Y + 4) {
+
+            myBotsInRange = findEntities(IS_OWNED_BY_ME, BOT, false)
+            lowestHealthAlly = filterEntities(myBotsInRange, [SORT_BY_LIFE], [SORT_ASCENDING])
+            if (exists(lowestHealthAlly) && getLife(lowestHealthAlly) >= 1900) {
+                // We are the last bot that needs healing, we have a special destination to get into nice formation.
+                m(REPAIR_X + 1, REPAIR_Y + 1)
+            }
+
             // Move out of way so teammates can repair. Move into something loosely resembling a formation.
             m(REPAIR_X + 1, REPAIR_Y + 3)
             m(REPAIR_X + 1, REPAIR_Y + 2)
@@ -273,6 +301,40 @@ hitAndRunRetreat = function() {
         hitAndRunFindTarget()
     }
     thisShouldNeverExecute("r")
+}
+
+determineSafetyThreshold = function() {
+    safetyThreshold = 300
+    if (someoneNeedsRepair()) safetyThreshold += 200
+    if (isZapping()) safetyThreshold -= 200
+    if (isReflecting()) safetyThreshold -= 100
+    // Our safety threshold should be lower when our shared target is about to die (take risks to finish off enemies before they can repair).
+    // (We don't want to refresh shared target now so we'll look at life of the lowest-health enemy in range instead of life of shared target).
+    lowestLifeEnemy = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
+    if (exists(lowestLifeEnemy)) {
+        // Maybe other units are near a target but we don't have anyone near us.
+        lifeLLE = getLife(lowestLifeEnemy)
+        if (lifeLLE <= 450) safetyThreshold -= 100
+    }
+
+    return max(0, safetyThreshold)
+}
+
+shouldWeRetreat = function() {
+    if (isEnemyNearRepairStation()) return false // prevent whipsaw
+
+    // If no allies are fighting next to us, and at least one ally has gone for repairs, we should prolly too
+    friendsNearBattle = size(findEntitiesInRange(IS_OWNED_BY_ME, BOT, true, 2))
+    if (someoneNeedsRepair() && friendsNearBattle <= 1) {
+        return true
+    }
+
+    // Normal case: if we predict we'll have less life than threshold on next turn, then we should teleport away now.
+    predictedDmg = max(500, dmgTaken)
+    if (countEnemyBotsWithMeleeCardinality(x, y) >= 2) predictedDmg += 300
+    predictedLife = currLife - predictedDmg
+    safetyThreshold = determineSafetyThreshold()
+    return predictedLife < safetyThreshold
 }
 
 moveCloser = function(cx, cy) {
@@ -541,6 +603,7 @@ startSpecialBackwmines = function() {
     }
 }
 
+
 startSpecialJuanjoBait = function() {
     if (turn == 1) wait()
     if (turn <= 4) m(x-1, y)
@@ -676,10 +739,11 @@ startSpecialRonThing = function() {
     }
 }
 
- */
+*/
 
 /*************************************************** FORWARD MINES **********************************************************/
 
+/*
 startSpecialForwMines = function() {
 
     if (!mode) mode = MODE_MINES_FORWARD
@@ -687,15 +751,13 @@ startSpecialForwMines = function() {
     if (mode == MODE_NORMAL) return
 
     if (mode == MODE_MINES_FORWARD) {
+        if (currDistToClosestBot <= 2) {
+            triggerCoordinatedTeleport()
+        }
         if (coordinatedTeleportTriggered()) {
             mode = MODE_LURE_THEM_IN
-            tryTeleport(startX, startY)
-            tryTeleport(x-5, y)
             tryDefensiveTeleport()
             thisShouldNeverExecute("h")
-        }
-        if (currDistToClosestBot <= 3) {
-            triggerCoordinatedTeleport()
         }
         if (canLayMine()) layMine()
         moveIfNoMeleeCardinality(x+1, y)
@@ -706,13 +768,6 @@ startSpecialForwMines = function() {
             mode = MODE_NORMAL
             signalAlliesNormalMode()
             zap()
-        }
-        LURE_UP = true
-        if (LURE_UP) {
-            if (y > 0) {
-                if (currDistToClosestBot >= 4 && canLayMine()) layMine()
-                m(x, y-1)
-            }
         }
         wait()
     }
@@ -749,6 +804,8 @@ tryDefensiveTeleport = function() {
         tryTeleport(x, y+4)
     }
 }
+
+*/
 
 /*************************************************** . **********************************************************/
 
