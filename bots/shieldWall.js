@@ -57,6 +57,9 @@ mineLureRetreat = function() {
     if (canLayMine()) layMine()
     tryToBreakMeleeCardinalityByMoving()
     m(x-1, y)
+    m(x, y+1)
+    m(x, y-1)
+    m(x+1, y)
 }
 
 tryToBreakMeleeCardinalityByMoving = function() {
@@ -67,7 +70,7 @@ tryToBreakMeleeCardinalityByMoving = function() {
 }
 
 tryDefensiveTeleport = function() {
-    // Prefer 5 dist jumps backward
+    // Prefer 5 dist jumps backward, then vertically
     tryTeleport(x-5, y)
     tryTeleport(x-4, y-1)
     tryTeleport(x-4, y+1)
@@ -77,6 +80,8 @@ tryDefensiveTeleport = function() {
     tryTeleport(x-2, y+3)
     tryTeleport(x-1, y-4)
     tryTeleport(x-1, y+4)
+    tryTeleport(x, y+5)
+    tryTeleport(x, y-5)
     // Shorter jumps backward
     tryTeleport(x-4, y)
     tryTeleport(x-3, y-1)
@@ -97,5 +102,7 @@ tryDefensiveTeleport = function() {
 idleJobs = function() {
     if (canLayMine()) layMine()
     tryToRepairSomeoneWithoutMoving()
+    if (willArtilleryHit()) fireArtillery()
+    if (canActivateSensors()) activateSensors()
     wait()
 }
