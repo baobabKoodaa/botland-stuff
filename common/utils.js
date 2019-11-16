@@ -43,6 +43,12 @@ tryMelee = function(cx, cy) {
     if (willMeleeHit(e)) melee(e)
 }
 
+meleeAnythingButDontCharge = function() {
+    range1targets = findEntitiesInRange(ENEMY, ANYTHING, false, 1)
+    anyTarget = filterEntities(range1targets, [SORT_BY_LIFE], [SORT_ASCENDING])
+    if (exists(anyTarget)) melee(anyTarget)
+}
+
 coordinatedTeleportTriggered = function() {
     if (sharedC == turn) return true
     if (sharedC == turn-1) return true // sometimes we act just before a teammate coordinates teleport, so we jump next turn

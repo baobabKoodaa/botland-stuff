@@ -10,10 +10,14 @@ init = function() {
     ALTERNATE_REFLECT_CLOAK = 1
     SENSORS_ALLOWED_FROM_TURN = 999
 
-    // startSpecial forwmine modes
+    // forwmine related
+    LURE_UP = false
     MODE_MINES_FORWARD = 1
     MODE_LURE_THEM_IN = 2
     MODE_NORMAL = 3
+
+    // backwmine related
+    BACKW_MINES_STALL = false
 
     // hitnrun related
     MODE_FIND_TARGET = 1
@@ -41,15 +45,15 @@ update = function() {
     commonStateUpdates()
 
     //startSpecialRonBait()
-    //startSpecialDarklingArcher2()
+    //startSpecialDarklingArcher3()
     //startSpecialJuanjoBait()
-    startSpecialForwMines()
+    //startSpecialForwMines()
     //startSpecialBackwmines()
-    //startSpecialAttackForwardEvenIfNoVisibility(1)
+    startSpecialAttackForwardEvenIfNoVisibility(0)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
-    //startSpecialRon2()
-    if (turn < 100) hitAndRun()
+    //startSpecialRon3()
+    //if (turn < 150) hitAndRun()
 
     normalActions()
 }
@@ -61,6 +65,8 @@ normalActions = function() {
 }
 
 /*************************************************** HIT AND RUN **********************************************************/
+
+/*
 
 hitAndRun = function() {
     if (!mode) mode = MODE_FIND_TARGET
@@ -363,10 +369,6 @@ moveFurther = function(cx, cy) {
     wait()
 }
 
-minFriendlyDistToEnemy = function() {
-
-}
-
 isGankTriggered = function() {
     return sharedC == turn-1
 }
@@ -531,6 +533,9 @@ fightEnemyNearRepairStation = function() {
     normalActions()
 }
 
+
+ */
+
 /*************************************************** Various start specials **********************************************************/
 
 startSpecialRon2 = function() {
@@ -540,7 +545,7 @@ startSpecialRon2 = function() {
         if (canZap()) zap()
     }
     if (turn <= 10) {
-        if (willMeleeHit()) melee()
+        meleeAnythingButDontCharge()
         mode = MODE_RETREAT_REPAIR
         tryTeleport(x-5, y)
         tryTeleport(x-4, y-1)
@@ -549,7 +554,21 @@ startSpecialRon2 = function() {
     }
 }
 
-/*
+startSpecialRon3 = function() {
+    if (turn <= 2) wait()
+    if (turn == 3) {
+        if (currDistToClosestBot <= 5 && canReflect()) reflect()
+        m(x+1, y)
+    }
+    if (turn <= 6) {
+        if (x == startX) m(x+1, y)
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+        tryTeleport(x+5, y)
+        probablyTeleportToBestOffensiveTeleportLocation()
+    }
+}
+
 
 startSpecialAttackForwardEvenIfNoVisibility = function(movesToRight) {
     if (!movesToRight) movesToRight = 0
@@ -576,41 +595,60 @@ startSpecialAttackVerticallyCenterEvenIfNoVisibility = function() {
     }
 }
 
+
 startSpecialBackwmines = function() {
     if (mode == MODE_NORMAL) {
         return
     }
     if (haveAlliesSignalledNormalMode()) {
         mode = MODE_NORMAL
-        if (!canLayMine()) {
-            m(x-1, y)
-        }
+        m(x-1, y)
         return
     }
-    if (turn == REFLECT_ALLOWED_FROM_TURN) {
-        if (canReflect()) reflect()
-    }
+    if (canReflect() && turn >= REFLECT_ALLOWED_FROM_TURN && currDistToClosestBot <= 5) reflect()
     if (turn < 10) {
-        if (currDistToClosestBot <= 2) {
+        if (currDistToClosestBot <= 1) {
             signalAlliesNormalMode()
-            if (!canLayMine()) m(x-1, y)
+            m(x-1, y)
             mode = MODE_NORMAL
             return
         }
-        if (canLayMine()) layMine()
+        if (canLayMine() && currDistToClosestBot >= 3) layMine()
+        if (BACKW_MINES_STALL && currDistToClosestBot >= 5) wait() // maintain visibility to lure the enemy in
         m(x-1, y)
         wait()
     }
 }
 
+hasWaitLureEnded = function() {
+    if (haveAlliesSignalledNormalMode()) return true
+    if (currDistToClosestBot <= 2 && canZap()) return true
+}
+
+haveAlliesSignalledNormalMode = function() {
+    return sharedD
+}
+
+signalAlliesNormalMode = function() {
+    sharedD = true
+}
+
+eat = function(cx, cy) {
+    return (exists(getEntityAt(cx, cy)))
+}
 
 startSpecialJuanjoBait = function() {
     if (turn == 1) wait()
-    if (turn <= 4) m(x-1, y)
-    if (turn <= 6) {
-        if (canReflect()) reflect()
-        if (canZap()) zap()
+    if (turn <= 3) m(x-1, y)
+    if (turn <= 8) {
+        if (canReflect() && currDistToClosestBot <= 5) reflect()
+        if (canZap() && currDistToClosestBot <= 2) zap()
+        tryMelee(x+1, y)
+        tryMelee(x, y+1)
+        tryMelee(x, y-1)
+        tryMelee(x-1, y)
     }
+    if (turn <= 7) wait()
 }
 
 startSpecialDarklingArcher = function() {
@@ -658,6 +696,23 @@ startSpecialDarklingArcher2 = function() {
         if (canReflect()) reflect()
         if (canZap()) zap()
         m(x+1, y)
+    }
+}
+
+startSpecialDarklingArcher3 = function() {
+    if (turn == 1) wait()
+    if (turn == 2) layMine()
+    if (turn <= 4) m(x-1, y)
+    if (turn <= 6) {
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+    }
+}
+
+startSpecialDarklingArcher4 = function() {
+    if (turn <= 2) {
+        if (canZap()) zap()
+        if (canReflect()) reflect()
     }
 }
 
@@ -739,51 +794,59 @@ startSpecialRonThing = function() {
     }
 }
 
-*/
-
 /*************************************************** FORWARD MINES **********************************************************/
 
+/*
 
 startSpecialForwMines = function() {
 
     if (!mode) mode = MODE_MINES_FORWARD
-    if (turn > 20) mode = MODE_NORMAL // in case we fail to lure the enemy in
+    if (turn > 30) mode = MODE_NORMAL // in case we fail to lure the enemy in
     if (mode == MODE_NORMAL) return
 
     if (mode == MODE_MINES_FORWARD) {
-        if (currDistToClosestBot <= 2) {
+        if (currDistToClosestBot <= 2 && !canLayMine()) {
+            triggerCoordinatedTeleport()
+        }
+        if (currDistToClosestBot <= 1) {
             triggerCoordinatedTeleport()
         }
         if (coordinatedTeleportTriggered()) {
             mode = MODE_LURE_THEM_IN
+            if (LURE_UP) tryTeleport(startX, startY)
+            else {
+                tryTeleport(0, y)
+                tryTeleport(x-5, y)
+            }
             tryDefensiveTeleport()
             n("h")
         }
+        if (dmgTaken > 100 && canReflect()) reflect()
         if (canLayMine()) layMine()
         moveIfNoMeleeCardinality(x+1, y)
         wait()
     }
     if (mode == MODE_LURE_THEM_IN) {
-        if (hasWaitLureEnded()) {
-            mode = MODE_NORMAL
-            signalAlliesNormalMode()
-            zap()
+        if (currDistToClosestBot <= 2) {
+            if (!sharedD) sharedD = turn
+            if (canZap()) zap()
         }
+        if (sharedD && turn >= sharedD+3) {
+            mode = MODE_NORMAL
+            normalActions()
+        }
+        if (dmgTaken > 100 && canReflect()) reflect()
+        if (LURE_UP && y>0) {
+            if (canLayMine()) layMine()
+            m(x, y-1)
+        }
+        tryMelee(x+1, y)
+        tryMelee(x, y+1)
+        tryMelee(x, y-1)
+        tryMelee(x-1, y)
+        if (canLayMine()) layMine()
         wait()
     }
-}
-
-hasWaitLureEnded = function() {
-    if (haveAlliesSignalledNormalMode()) return true
-    if (currDistToClosestBot <= 2 && canZap()) return true
-}
-
-haveAlliesSignalledNormalMode = function() {
-    return sharedD
-}
-
-signalAlliesNormalMode = function() {
-    sharedD = true
 }
 
 tryDefensiveTeleport = function() {
@@ -805,7 +868,7 @@ tryDefensiveTeleport = function() {
     }
 }
 
-
+*/
 
 /*************************************************** . **********************************************************/
 
@@ -875,12 +938,6 @@ chooseTarget = function() {
         // TODO alarm target set by other units?
     }
     return bestEntity;
-}
-
-retreatTeleport = function() {
-
-    // maximize distance from enemies
-    // bonus to left-most
 }
 
 // TODO regroup: move all units back to initial formation, using teleports if possible
