@@ -10,9 +10,9 @@ update = function() {
 
     if (turn <= 4) {
         if (canCloak()) cloak()
-        tryMoveTo(x+1, y)
-        tryMoveTo(x, y-5)
-        tryMoveTo(x, y+5)
+        m(x+1, y)
+        m(x, y-5)
+        m(x, y+5)
     }
     if (turn == 5) {
         tryTeleport(x, y-5)
@@ -23,7 +23,7 @@ update = function() {
 
     cpu = findEntity(ENEMY, CPU, SORT_BY_DISTANCE, SORT_ASCENDING)
     if (getDistanceTo(xCPU, yCPU) > 1) {
-        tryMoveTo(xCPU+1, yCPU)
+        m(xCPU+1, yCPU)
         if (canZap()) zap()
         if (willMeleeHit()) melee()
     } else {

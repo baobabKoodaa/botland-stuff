@@ -47,10 +47,10 @@ update = function() {
     }
 
     // If we can't fire at CPU let's try to get closer to it.
-    if (x < xCPU) tryMoveTo(x+1, y)
-    if (y < yCPU) tryMoveTo(x, y+1)
-    if (y > yCPU) tryMoveTo(x, y-1)
-    if (x < xCPU+1) tryMoveTo(x+1, y)
+    if (x < xCPU) m(x+1, y)
+    if (y < yCPU) m(x, y+1)
+    if (y > yCPU) m(x, y-1)
+    if (x < xCPU+1) m(x+1, y)
 
     // Fallback to things we can do without moving from our hiding spot.
     if (canReflect()) reflect()
