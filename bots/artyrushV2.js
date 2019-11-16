@@ -4,7 +4,8 @@
 init = function() {
 
     KILL_REPAIRERS = 0
-    ALTERNATE_REFLECT_CLOAK = 1
+    ALTERNATE_REFLECT_CLOAK = 0
+    REFLECT_ON_DMG = 1
     DODGE_ARTILLERY = 0
 
     // These are needed for dodge position preference
@@ -25,7 +26,7 @@ update = function() {
     //startSpecialCloakTele()
     //startSpecialCloakTeleReflect()
     //startSpecialTeleCloak()
-    startSpecialSlowRush(8)
+    startSpecialSlowRush(6)
     //startSpecialCloakMoveToGoal()
     //startSpecialCraiton()
 
@@ -64,6 +65,9 @@ update = function() {
         // Preference on reflecting
         if (canReflect() && !isReflecting() && !isCloaked()) reflect()
         if (canCloak() && !isReflecting() && !isCloaked()) cloak()
+    }
+    if (REFLECT_ON_DMG && dmgTaken >= 100) {
+        if (canReflect() && !isReflecting() && !isCloaked()) reflect()
     }
 
     if (!exists(target) || !willArtilleryHit(target)) {
