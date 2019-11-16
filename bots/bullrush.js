@@ -70,7 +70,7 @@ startSpecialDarkLingBullRush = function() {
         tryTeleport(xCPU+1, yCPU)
     }
     if (willMeleeHit(cpu)) melee(cpu)
-    thisShouldNeverExecute()
+    n()
 }
 
 maybeMelee = function(cx, cy) {
