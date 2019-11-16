@@ -889,12 +889,16 @@ goAfterCPUandChips = function() {
     target = findEntity(ENEMY, CHIP | CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     if (!exists(target)) {
         maybeSensors()
-        moveTo(xCPU, yCPU)
+        m(xCPU, yCPU)
     }
     if (willMeleeHit(target)) {
         melee(target)
     }
-    moveTo(target)
+    if (getDistanceTo(target) == 0) {
+        // We are standing on a chip and need to move off the chip in order to hit it.
+        move()
+    }
+    m(target)
 }
 
 zapAllowed = function() {
