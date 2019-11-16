@@ -66,8 +66,6 @@ normalActions = function() {
 
 /*************************************************** HIT AND RUN **********************************************************/
 
-/*
-
 hitAndRun = function() {
     if (!mode) mode = MODE_FIND_TARGET
     if (mode == MODE_FIND_TARGET) hitAndRunFindTarget()
@@ -440,7 +438,7 @@ refreshAllyPositions = function() {
     }
 }
 
-chooseTarget = function() {
+hitAndRunChooseTarget = function() {
     bestTarget = null
     bestTargetCandidateScore = 1000000000
 
@@ -459,7 +457,7 @@ chooseTarget = function() {
 }
 
 assignNewSharedTarget = function() {
-    bestTarget = chooseTarget()
+    bestTarget = hitAndRunChooseTarget()
     if (exists(bestTarget)) {
         ex = getX(bestTarget)
         ey = getY(bestTarget)
@@ -532,9 +530,6 @@ fightEnemyNearRepairStation = function() {
     // Quick hack. TODO: properly.
     normalActions()
 }
-
-
- */
 
 /*************************************************** Various start specials **********************************************************/
 
@@ -722,31 +717,6 @@ startSpecialRonBait = function() {
     }
 }
 
-refcanSpecial = function() {
-    if (!isReflecting() && !canTeleport() && !canReflect()) {
-        target = chooseTarget();
-        if (exists(target)) fight(target)
-        w()
-    }
-    if (canReflect()) {
-        reflect()
-    }
-    if (isReflecting()) {
-        target = chooseTarget();
-        if (exists(target)) fight(target)
-        else goAfterCPUandChips()
-    }
-    if (!isReflecting() && canTeleport()) {
-        t(x-5, y)
-        t(x-4, y-1)
-        t(x-4, y+1)
-        t(x-3, y-2)
-        t(x-3, y+2)
-        t(x-4, y)
-        t(x-3, y)
-    }
-}
-
 startSpecialWaitCan = function() {
     if (turn == 1) w()
     if (turn <= 3) m(x-1, y)
@@ -792,8 +762,6 @@ startSpecialRonThing = function() {
 }
 
 /*************************************************** FORWARD MINES **********************************************************/
-
-/*
 
 startSpecialForwMines = function() {
 
@@ -861,8 +829,6 @@ tryDefensiveTeleport = function() {
         t(x, y+4)
     }
 }
-
-*/
 
 /*************************************************** . **********************************************************/
 
