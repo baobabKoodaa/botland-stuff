@@ -14,8 +14,8 @@ update = function() {
     if (turn == 3) moveTo(x+1, y)
     if (turn == 4) moveTo(x+1, y)
     if (turn == 5) {
-        tryTeleport(x+4, y-1)
-        tryTeleport(x+4, y+1)
+        t(x+4, y-1)
+        t(x+4, y+1)
     }
 
     cpu = findEntity(ENEMY, CPU, SORT_BY_DISTANCE, SORT_ASCENDING);

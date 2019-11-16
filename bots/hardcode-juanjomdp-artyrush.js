@@ -28,9 +28,9 @@ update = function() {
         if (turn == 2) moveTo(x+1, y)
         if (turn == 3) moveTo(x+1, y)
         if (turn == 4) {
-            if (y == 0) tryTeleport(x+4, y+1)
-            if (y == arenaHeight-1) tryTeleport(x+4, y-1)
-            tryTeleport(x+5, y)
+            if (y == 0) t(x+4, y+1)
+            if (y == arenaHeight-1) t(x+4, y-1)
+            t(x+5, y)
         }
         if (turn == 5 || turn == 6) {
             repairer = getEntityAt(xCPU-1, yCPU)

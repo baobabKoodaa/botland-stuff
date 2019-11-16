@@ -97,7 +97,7 @@ maybeFire = function() {
 
 moveIfSafe = function(cx, cy) {
     if (isLocationHot(cx, cy)) return;
-    tryMoveTo(cx, cy);
+    m(cx, cy);
 }
 
 maybeMoveTowardsStartLocation = function() {

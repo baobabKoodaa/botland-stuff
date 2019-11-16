@@ -4,7 +4,7 @@ n = function(msg) {
     taunt('CRYING')
 }
 
-wait = function() {
+w = function() {
     taunt('THUMBS_UP')
 }
 
@@ -25,7 +25,7 @@ canActuallyTeleport = function(cx, cy) {
     return (!outOfBounds(cx, cy) && canTeleport(cx, cy) && !getEntityAt(cx, cy))
 }
 
-tryTeleport = function(cx, cy) {
+t = function(cx, cy) {
     if (canActuallyTeleport(cx, cy)) {
         lastMoveTurn = turn
         lastTeleportTurn = turn

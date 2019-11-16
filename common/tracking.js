@@ -69,8 +69,8 @@ decloakHelper = function() {
 *      when a bot is shielded, its priority should be incremented
 */
 
-askForShield = function(priority, t, cx, cy) {
-    enc = encode(0, priority, t, cx, cy)
+askForShield = function(priority, ct, cx, cy) {
+    enc = encode(0, priority, ct, cx, cy)
     saveEncodedValue(enc, POINTER_NEXT_AVAILABLE_SHIELD_INDEX, MIN_SHIELD_PRIO_INDEX, MAX_SHIELD_PRIO_INDEX)
 }
 
@@ -135,9 +135,9 @@ enemySpottedAt = function(cx, cy) {
  */
 
 // Note: a <= 9006 due to JS integer limit.
-encode = function(a, b, t, cx, cy) {
-    if (a > 9006 || b > 9999 || t > 9999 || cx > 99 || cy > 99) debugLog("encodeError a="+a+",b="+b+",t="+t+",cx="+cx+",cy="+cy)
-    return a*1000000000000 + b*100000000 + t*10000 + cx*100 + cy
+encode = function(a, b, ct, cx, cy) {
+    if (a > 9006 || b > 9999 || ct > 9999 || cx > 99 || cy > 99) debugLog("encodeError a="+a+",b="+b+",ct="+ct+",cx="+cx+",cy="+cy)
+    return a*1000000000000 + b*100000000 + ct*10000 + cx*100 + cy
 }
 
 decodePriority = function(enc) {

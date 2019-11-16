@@ -15,10 +15,10 @@ update = function() {
         m(x, y+5)
     }
     if (turn == 5) {
-        tryTeleport(x, y-5)
-        tryTeleport(x, y+5)
-        tryTeleport(x-1, y+4)
-        tryTeleport(x-1, y-4)
+        t(x, y-5)
+        t(x, y+5)
+        t(x-1, y+4)
+        t(x-1, y-4)
     }
 
     cpu = findEntity(ENEMY, CPU, SORT_BY_DISTANCE, SORT_ASCENDING)

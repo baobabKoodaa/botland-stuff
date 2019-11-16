@@ -25,9 +25,9 @@ update = function() {
 baitSpecial = function() {
     if (turn == 1 && canReflect()) reflect()
     if (currDistToClosestBot == 1 && canTeleport()) {
-        tryTeleport(x-3, y-2)
-        tryTeleport(x-4, y-1)
-        tryTeleport(x-5, y)
+        t(x-3, y-2)
+        t(x-4, y-1)
+        t(x-5, y)
     }
     if (turn <= 3) m(x-1, y)
     if (turn >= 8 && canEmp()) emp('MELEE')
@@ -40,7 +40,7 @@ darklingSpecial = function() {
         if (canReflect()) reflect()
     }
     if (turn == 2) {
-        tryTeleport(x-5, y)
+        t(x-5, y)
     }
     if (turn <= 4) {
         m(x-1, y)

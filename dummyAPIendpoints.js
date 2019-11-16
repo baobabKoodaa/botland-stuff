@@ -44,6 +44,7 @@ layMine = function() {}
 max = function() {}
 melee = function() {}
 move = function() {}
+moveTo = function() {}
 pursue = function() {}
 randInt = function() {}
 reflect = function() {}

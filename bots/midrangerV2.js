@@ -67,11 +67,11 @@ retreatAndRepair = function() {
     }
     if (x > repairGoalX) {
         if (x > repairGoalX+2) {
-            tryTeleport(x-5, y)
-            tryTeleport(x-4, y-1)
-            tryTeleport(x-4, y+1)
-            tryTeleport(x-3, y-2)
-            tryTeleport(x-3, y+2)
+            t(x-5, y)
+            t(x-4, y-1)
+            t(x-4, y+1)
+            t(x-3, y-2)
+            t(x-3, y+2)
         }
         m(x-1, y)
         m(x-2, y)
@@ -96,7 +96,7 @@ retreatAndRepair = function() {
         lowestLifeFriendly = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
         goRepairIfNeeded(lowestLifeFriendly)
 
-        wait() // If we are blocked from moving to ally in y-direction, just wait. We don't want to ruin our formation by moving in x-direction.
+        w() // If we are blocked from moving to ally in y-direction, just w. We don't want to ruin our formation by moving in x-direction.
     }
 }
 
@@ -334,7 +334,7 @@ coordinatedAttackWithDodging = function() {
 
     // Not safe to move
     tryToRepairSomeoneWithoutMoving()
-    wait()
+    w()
 }
 
 moveCloserOrSomething = function(ex, ey) {
@@ -368,7 +368,7 @@ moveCloserOrSomething = function(ex, ey) {
 
     // We can't move towards target, we can't fire.
     tryToRepairSomeoneWithoutMoving()
-    wait()
+    w()
 }
 
 isSafe = function(cx, cy) {
@@ -385,7 +385,7 @@ tryTeleportIfSafe = function(cx, cy) {
     if (!getDistanceTo(cx, cy) > 5) return
     if (exists(getEntityAt(cx, cy))) return
     // The actual tryTeleportIfSafe functionality
-    if (isSafe(cx, cy)) tryTeleport(cx, cy)
+    if (isSafe(cx, cy)) t(cx, cy)
 }
 
 NFtryTeleportIfSafe = function(cx, cy) {

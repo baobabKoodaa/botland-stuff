@@ -53,9 +53,9 @@ specialActions = function() {
     }
     if (turn == 1 && countEnemyBotsWithinDist(x, y, 1, 1) >= 2) {
         flagDanger(x, y)
-        tryTeleport(x+5, y)
-        tryTeleport(x+4, y+1)
-        tryTeleport(x+4, y-1)
+        t(x+5, y)
+        t(x+4, y+1)
+        t(x+4, y-1)
     }
     if (turn == 1 && getEntityAt(10,0)) flagCPUrush()
     if (turn == 1 && getEntityAt(10,arenaHeight-1)) flagCPUrush()

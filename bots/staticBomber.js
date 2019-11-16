@@ -13,7 +13,7 @@ update = function() {
     if (!areSensorsActivated()) {
         if (canActivateSensors()) activateSensors()
         if (willArtilleryHit()) fireArtillery()
-        wait()
+        w()
     }
 
     target = findClosestEnemyBot()

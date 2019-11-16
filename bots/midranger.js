@@ -132,19 +132,19 @@ specialActions = function() {
 
 tryDefensiveTeleport = function() {
     if (y <= arenaHeight/2) {
-        tryTeleport(x-3, y-1)
-        tryTeleport(x-4, y)
-        tryTeleport(x-2, y-2)
-        tryTeleport(x-3, y)
-        tryTeleport(x-1, y-3)
-        tryTeleport(x, y-4)
+        t(x-3, y-1)
+        t(x-4, y)
+        t(x-2, y-2)
+        t(x-3, y)
+        t(x-1, y-3)
+        t(x, y-4)
     } else {
-        tryTeleport(x-3, y+1)
-        tryTeleport(x-4, y)
-        tryTeleport(x-2, y+2)
-        tryTeleport(x-3, y)
-        tryTeleport(x-1, y+3)
-        tryTeleport(x, y+4)
+        t(x-3, y+1)
+        t(x-4, y)
+        t(x-2, y+2)
+        t(x-3, y)
+        t(x-1, y+3)
+        t(x, y+4)
     }
 }
 
@@ -211,7 +211,7 @@ maybeRepair = function() {
         if (waitingForFriendsToRepair) {
             lowestHealthNearbyFriendlyBot = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
             if (exists(lowestHealthNearbyFriendlyBot) && getLife(lowestHealthNearbyFriendlyBot) < 2000) {
-                // Still have to wait for some friends to repair. Move out of the way.
+                // Still have to w for some friends to repair. Move out of the way.
                 if (y != REPAIR_Y && (x == REPAIR_X+1 || x == REPAIR_X+2)) {
                     m(x-1, y)
                     if (y < yCPU) m(x, y+1)
@@ -225,7 +225,7 @@ maybeRepair = function() {
                 }
                 if (y < yCPU-1) m(x, y+1)
                 if (willMissilesHit()) fireMissiles()
-                move(x, y) // wait
+                move(x, y) // w
             } else {
                 // Everyone is repaired, let's fight!
                 waitingForFriendsToRepair = false

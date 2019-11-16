@@ -104,11 +104,11 @@ startSpecialSlowRush = function(cloakTurn) {
     }
     if (turn <= cloakTurn+3) m(x+1, y)
     if (turn == cloakTurn+4) {
-        tryTeleport(x+5, y)
-        tryTeleport(x+4, y+1)
-        tryTeleport(x+4, y-1)
-        tryTeleport(x+3, y+2)
-        tryTeleport(x+3, y-2)
+        t(x+5, y)
+        t(x+4, y+1)
+        t(x+4, y-1)
+        t(x+3, y+2)
+        t(x+3, y-2)
     }
 }
 
@@ -119,7 +119,7 @@ startSpecialCraiton = function() {
                 if (canShield()) shield()
                 activateSensors()
             }
-            wait()
+            w()
         }
         if (areSensorsActivated()) m(x+1, y)
     }
@@ -175,11 +175,11 @@ startSpecialCloakMoveThreeTele = function() {
     if (turn == 3) m(x+1, y)
     if (turn == 4) m(x+1, y)
     if (turn == 5) {
-        tryTeleport(x+5, y)
-        tryTeleport(x+4, y+1)
-        tryTeleport(x+4, y-1)
-        tryTeleport(x+3, y+2)
-        tryTeleport(x+3, y-2)
+        t(x+5, y)
+        t(x+4, y+1)
+        t(x+4, y-1)
+        t(x+3, y+2)
+        t(x+3, y-2)
     }
 }
 
@@ -192,33 +192,33 @@ startSpecialMoveThreeCloakMoveThreeTele = function() {
     if (turn == 6) m(x+1, y)
     if (turn == 7) m(x+1, y)
     if (turn == 8) {
-        tryTeleport(x+5, y)
-        tryTeleport(x+4, y+1)
-        tryTeleport(x+4, y-1)
-        tryTeleport(x+3, y+2)
-        tryTeleport(x+3, y-2)
+        t(x+5, y)
+        t(x+4, y+1)
+        t(x+4, y-1)
+        t(x+3, y+2)
+        t(x+3, y-2)
     }
 }
 
 startSpecialReflectTele = function() {
     if (turn == 1 && canReflect()) reflect()
     if (turn <= 2) {
-        tryTeleport(x+5, y)
-        tryTeleport(x+4, y+1)
-        tryTeleport(x+4, y-1)
-        tryTeleport(x+3, y+2)
-        tryTeleport(x+3, y-2)
+        t(x+5, y)
+        t(x+4, y+1)
+        t(x+4, y-1)
+        t(x+3, y+2)
+        t(x+3, y-2)
     }
 }
 
 startSpecialCloakTele = function() {
     if (turn == 1 && canCloak()) cloak()
     if (turn <= 2) {
-        tryTeleport(x+5, y)
-        tryTeleport(x+4, y+1)
-        tryTeleport(x+4, y-1)
-        tryTeleport(x+3, y+2)
-        tryTeleport(x+3, y-2)
+        t(x+5, y)
+        t(x+4, y+1)
+        t(x+4, y-1)
+        t(x+3, y+2)
+        t(x+3, y-2)
     }
 }
 
@@ -229,11 +229,11 @@ startSpecialCloakTeleReflect = function() {
 
 startSpecialTeleCloak = function() {
     if (turn == 1) {
-        tryTeleport(x+5, y)
-        tryTeleport(x+4, y+1)
-        tryTeleport(x+4, y-1)
-        tryTeleport(x+3, y+2)
-        tryTeleport(x+3, y-2)
+        t(x+5, y)
+        t(x+4, y+1)
+        t(x+4, y-1)
+        t(x+3, y+2)
+        t(x+3, y-2)
     }
     if (turn == 2 && canCloak()) cloak()
 }

@@ -1,7 +1,7 @@
 init = function () {
     FIRE1 = 1;
     FIRE2 = 2;
-    // Sensor cooldown is 3 turns + wait for enemy artillery to land
+    // Sensor cooldown is 3 turns + w for enemy artillery to land
     BACKWARD1 = 3;
     BACKWARD2 = 4;
     BACKWARD3 = 5;

@@ -44,12 +44,12 @@ startSpecialDarkLingBullRush = function() {
     if (turn == 1 && canCloak()) cloak()
     if (turn <= 3) m(x+1, y)
     if (turn == 4) {
-        tryTeleport(xCPU, yCPU-1)
-        tryTeleport(xCPU, yCPU+1)
-        tryTeleport(xCPU, yCPU-2)
-        tryTeleport(xCPU, yCPU+2)
-        tryTeleport(xCPU+1, yCPU-1)
-        tryTeleport(xCPU+1, yCPU+1)
+        t(xCPU, yCPU-1)
+        t(xCPU, yCPU+1)
+        t(xCPU, yCPU-2)
+        t(xCPU, yCPU+2)
+        t(xCPU+1, yCPU-1)
+        t(xCPU+1, yCPU+1)
     }
     if (canZap() && abs(y-yCPU) <= 1 && !isCloaked() && life > 600) {
         zap()
@@ -67,7 +67,7 @@ startSpecialDarkLingBullRush = function() {
     }
     if (dmgTaken > 300) {
         if (canReflect() && !isCloaked()) reflect()
-        tryTeleport(xCPU+1, yCPU)
+        t(xCPU+1, yCPU)
     }
     if (willMeleeHit(cpu)) melee(cpu)
     n()

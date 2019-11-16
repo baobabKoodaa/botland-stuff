@@ -35,7 +35,7 @@ init = function() {
     //          [FORWMINES] coordinated teleport (turn when teleport was triggered; that turn + the next turn bots will try to teleport back)
     //          [HITANDRUN] coordinated gank (turn when gank was triggered; bots will try to gank ONLY ON THE TURN AFTER THAT)
     // sharedD reserved for
-    //          [FORWMINES] end-of-wait-lure
+    //          [FORWMINES] end-of-w-lure
     //          [HITANDRUN] turn when an ally last needed repair
     // sharedE reserved for [HITANDRUN] shared target (x*100+y)
 };
@@ -215,15 +215,15 @@ hitAndRunGank = function() {
     if (canZap()) zap()
     if (!willMeleeHit(target) && turn == coordinatedGankTeleportTurn()) {
         // TODO if the target has moved backward, some of our tincans will be able to teleport to only some of the locations; we need to coordinate who teleports where so that we guarantee that all tincans will be able to teleport next to target.
-        tryTeleport(ex - 1, ey)
-        tryTeleport(ex, ey-1)
-        tryTeleport(ex, ey+1)
-        tryTeleport(ex+1, ey)
+        t(ex - 1, ey)
+        t(ex, ey-1)
+        t(ex, ey+1)
+        t(ex+1, ey)
         // Fallback if preferred tiles are occupied
-        tryTeleport(ex-1, ey-1)
-        tryTeleport(ex-1, ey+1)
-        tryTeleport(ex+1, ey-1)
-        tryTeleport(ex+1, ey+1)
+        t(ex-1, ey-1)
+        t(ex-1, ey+1)
+        t(ex+1, ey-1)
+        t(ex+1, ey+1)
     }
     if (willMeleeHit(target)) melee(target)
     m(ex, ey)
@@ -252,8 +252,8 @@ hitAndRunRetreat = function() {
             }
             if (canTeleport() && distToRepair > 5) {
                 // TODO teleport-towards-repair targets properly
-                tryTeleport(x-4, y-1)
-                tryTeleport(x-3, y-2)
+                t(x-4, y-1)
+                t(x-3, y-2)
             }
             // Try to move towards the 'corner' of repair-man
             if (x > REPAIR_X+1) m(x-1, y)
@@ -272,7 +272,7 @@ hitAndRunRetreat = function() {
                 // Repair-man is dead
                 REPAIR_AVAILABLE = 0
             }
-            wait()
+            w()
         }
     } else if (someoneNeedsRepair()) {
         if (distToRepair > 5) {
@@ -300,7 +300,7 @@ hitAndRunRetreat = function() {
             m(REPAIR_X, REPAIR_Y+1)
             m(REPAIR_X, REPAIR_Y)
         } else {
-            wait()
+            w()
         }
     } else {
         // We don't need more repair, our teammates don't need more repair. Assume our cooldowns are ok too.
@@ -366,7 +366,7 @@ moveFurther = function(cx, cy) {
     if (canReflect()) reflect()
     if (canZap()) zap()
     if (willMeleeHit()) melee()
-    wait()
+    w()
 }
 
 isGankTriggered = function() {
@@ -378,7 +378,7 @@ triggerGank = function() {
 }
 
 coordinatedGankTeleportTurn = function() {
-    return sharedC + 3 // wait-for-all-to-have-equal-opportunity, ref, zap, tele == +3
+    return sharedC + 3 // w-for-all-to-have-equal-opportunity, ref, zap, tele == +3
 }
 
 scoreTargetCandidate = function(targetCandidate) {
@@ -547,15 +547,15 @@ startSpecialRon2 = function() {
     if (turn <= 10) {
         meleeAnythingButDontCharge()
         mode = MODE_RETREAT_REPAIR
-        tryTeleport(x-5, y)
-        tryTeleport(x-4, y-1)
-        tryTeleport(x-3, y-2)
-        tryTeleport(x-4, y)
+        t(x-5, y)
+        t(x-4, y-1)
+        t(x-3, y-2)
+        t(x-4, y)
     }
 }
 
 startSpecialRon3 = function() {
-    if (turn <= 2) wait()
+    if (turn <= 2) w()
     if (turn == 3) {
         if (currDistToClosestBot <= 5 && canReflect()) reflect()
         m(x+1, y)
@@ -564,7 +564,7 @@ startSpecialRon3 = function() {
         if (x == startX) m(x+1, y)
         if (canReflect()) reflect()
         if (canZap()) zap()
-        tryTeleport(x+5, y)
+        t(x+5, y)
         probablyTeleportToBestOffensiveTeleportLocation()
     }
 }
@@ -576,7 +576,7 @@ startSpecialAttackForwardEvenIfNoVisibility = function(movesToRight) {
     if (turn <= 4 + movesToRight) {
         if (canReflect()) reflect()
         if (canZap()) zap()
-        tryTeleport(x+5, y)
+        t(x+5, y)
         probablyTeleportToBestOffensiveTeleportLocation()
     }
 }
@@ -585,12 +585,12 @@ startSpecialAttackVerticallyCenterEvenIfNoVisibility = function() {
     if (turn <= 3) {
         if (canReflect()) reflect()
         if (canZap()) zap()
-        tryTeleport(x, y+5)
-        tryTeleport(x, y-5)
-        tryTeleport(x+1, y-4)
-        tryTeleport(x-1, y-4)
-        tryTeleport(x+1, y+4)
-        tryTeleport(x-1, y+4)
+        t(x, y+5)
+        t(x, y-5)
+        t(x+1, y-4)
+        t(x-1, y-4)
+        t(x+1, y+4)
+        t(x-1, y+4)
         probablyTeleportToBestOffensiveTeleportLocation()
     }
 }
@@ -614,9 +614,9 @@ startSpecialBackwmines = function() {
             return
         }
         if (canLayMine() && currDistToClosestBot >= 3) layMine()
-        if (BACKW_MINES_STALL && currDistToClosestBot >= 5) wait() // maintain visibility to lure the enemy in
+        if (BACKW_MINES_STALL && currDistToClosestBot >= 5) w() // maintain visibility to lure the enemy in
         m(x-1, y)
-        wait()
+        w()
     }
 }
 
@@ -638,26 +638,23 @@ eat = function(cx, cy) {
 }
 
 startSpecialJuanjoBait = function() {
-    if (turn == 1) wait()
+    if (turn == 1) w()
     if (turn <= 3) m(x-1, y)
     if (turn <= 8) {
         if (canReflect() && currDistToClosestBot <= 5) reflect()
         if (canZap() && currDistToClosestBot <= 2) zap()
-        tryMelee(x+1, y)
-        tryMelee(x, y+1)
-        tryMelee(x, y-1)
-        tryMelee(x-1, y)
+        meleeAnythingButDontCharge()
     }
-    if (turn <= 7) wait()
+    if (turn <= 7) w()
 }
 
 startSpecialDarklingArcher = function() {
     if (turn == 1) layMine()
     if (turn == 2) {
         if (x >= 6) {
-            tryTeleport(2, 5)
-            tryTeleport(2, 6)
-            tryTeleport(2, 7)
+            t(2, 5)
+            t(2, 6)
+            t(2, 7)
         }
         m(x-1, y)
     }
@@ -682,15 +679,15 @@ startSpecialDarklingArcher = function() {
 startSpecialDarklingArcher2 = function() {
     if (currDistToClosestBot <= 2) return
     if (turn == 1) {
-        if (y == 4) tryTeleport(x-4, y+1)
-        if (y == 6) tryTeleport(x-5, y)
-        if (y == 8) tryTeleport(x-4, y-1)
+        if (y == 4) t(x-4, y+1)
+        if (y == 6) t(x-5, y)
+        if (y == 8) t(x-4, y-1)
     }
     if (turn <= 3) {
         if (getEntityAt(x+3, y) || getEntityAt(x+4, y) || getEntityAt(x+5, y)) {
             reflect()
         }
-        wait()
+        w()
     }
     if (turn <= 7) {
         if (canReflect()) reflect()
@@ -700,7 +697,7 @@ startSpecialDarklingArcher2 = function() {
 }
 
 startSpecialDarklingArcher3 = function() {
-    if (turn == 1) wait()
+    if (turn == 1) w()
     if (turn == 2) layMine()
     if (turn <= 4) m(x-1, y)
     if (turn <= 6) {
@@ -717,7 +714,7 @@ startSpecialDarklingArcher4 = function() {
 }
 
 startSpecialRonBait = function() {
-    if (turn <= 4) wait()
+    if (turn <= 4) w()
     if (turn == 5) zap()
     if (turn <= 7) {
         if (willMeleeHit()) melee()
@@ -729,7 +726,7 @@ refcanSpecial = function() {
     if (!isReflecting() && !canTeleport() && !canReflect()) {
         target = chooseTarget();
         if (exists(target)) fight(target)
-        wait()
+        w()
     }
     if (canReflect()) {
         reflect()
@@ -740,18 +737,18 @@ refcanSpecial = function() {
         else goAfterCPUandChips()
     }
     if (!isReflecting() && canTeleport()) {
-        tryTeleport(x-5, y)
-        tryTeleport(x-4, y-1)
-        tryTeleport(x-4, y+1)
-        tryTeleport(x-3, y-2)
-        tryTeleport(x-3, y+2)
-        tryTeleport(x-4, y)
-        tryTeleport(x-3, y)
+        t(x-5, y)
+        t(x-4, y-1)
+        t(x-4, y+1)
+        t(x-3, y-2)
+        t(x-3, y+2)
+        t(x-4, y)
+        t(x-3, y)
     }
 }
 
 startSpecialWaitCan = function() {
-    if (turn == 1) wait()
+    if (turn == 1) w()
     if (turn <= 3) m(x-1, y)
     if (turn == 4) activateSensors()
     if (turn == 5) reflect()
@@ -771,26 +768,26 @@ startSpecialRonThing = function() {
         if (x >= xCPU-5) {
             zap()
         } else {
-            wait()
+            w()
         }
     }
     if (turn == 4) {
         if (x >= xCPU-5) {
-            tryTeleport(xCPU-1, y)
-            tryTeleport(xCPU-1, y-1)
-            tryTeleport(xCPU-1, y+1)
-            tryTeleport(xCPU-2, y+1)
-            tryTeleport(xCPU-2, y-1)
+            t(xCPU-1, y)
+            t(xCPU-1, y-1)
+            t(xCPU-1, y+1)
+            t(xCPU-2, y+1)
+            t(xCPU-2, y-1)
             probablyTeleportToBestOffensiveTeleportLocation()
         } else {
-            wait()
+            w()
         }
     }
     if (turn <= 6 && x < xCPU-5) {
         m(x-1, y)
     }
     if (turn == 7 && x < xCPU-5) {
-        wait()
+        w()
     }
 }
 
@@ -813,10 +810,10 @@ startSpecialForwMines = function() {
         }
         if (coordinatedTeleportTriggered()) {
             mode = MODE_LURE_THEM_IN
-            if (LURE_UP) tryTeleport(startX, startY)
+            if (LURE_UP) t(startX, startY)
             else {
-                tryTeleport(0, y)
-                tryTeleport(x-5, y)
+                t(0, y)
+                t(x-5, y)
             }
             tryDefensiveTeleport()
             n("h")
@@ -824,7 +821,7 @@ startSpecialForwMines = function() {
         if (dmgTaken > 100 && canReflect()) reflect()
         if (canLayMine()) layMine()
         moveIfNoMeleeCardinality(x+1, y)
-        wait()
+        w()
     }
     if (mode == MODE_LURE_THEM_IN) {
         if (currDistToClosestBot <= 2) {
@@ -840,31 +837,28 @@ startSpecialForwMines = function() {
             if (canLayMine()) layMine()
             m(x, y-1)
         }
-        tryMelee(x+1, y)
-        tryMelee(x, y+1)
-        tryMelee(x, y-1)
-        tryMelee(x-1, y)
+        meleeAnythingButDontCharge()
         if (canLayMine()) layMine()
-        wait()
+        w()
     }
 }
 
 tryDefensiveTeleport = function() {
     // Only tele to 4 dist because we want the enemy to see us and walk through mines.
     if (y <= arenaHeight/2) {
-        tryTeleport(x-3, y-1)
-        tryTeleport(x-4, y)
-        tryTeleport(x-2, y-2)
-        tryTeleport(x-3, y)
-        tryTeleport(x-1, y-3)
-        tryTeleport(x, y-4)
+        t(x-3, y-1)
+        t(x-4, y)
+        t(x-2, y-2)
+        t(x-3, y)
+        t(x-1, y-3)
+        t(x, y-4)
     } else {
-        tryTeleport(x-3, y+1)
-        tryTeleport(x-4, y)
-        tryTeleport(x-2, y+2)
-        tryTeleport(x-3, y)
-        tryTeleport(x-1, y+3)
-        tryTeleport(x, y+4)
+        t(x-3, y+1)
+        t(x-4, y)
+        t(x-2, y+2)
+        t(x-3, y)
+        t(x-1, y+3)
+        t(x, y+4)
     }
 }
 
@@ -1002,7 +996,7 @@ probablyTeleportToBestOffensiveTeleportLocation = function() {
             }
         }
     }
-    if (bestScore >= 1000) tryTeleport(bestX, bestY);
+    if (bestScore >= 1000) t(bestX, bestY);
 }
 
 maybeTeleportIntoEnemies = function(target) {

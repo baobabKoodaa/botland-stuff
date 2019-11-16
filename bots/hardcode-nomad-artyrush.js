@@ -17,7 +17,7 @@ update = function() {
     d = getDistanceTo(xCPU, yCPU)
 
     if (turn == 1) reflect()
-    if (turn == 2) tryTeleport(x+5, y)
+    if (turn == 2) t(x+5, y)
 
     if (turn >= ALTERNATE_REFLECT_CLOAK_ALLOWED_FROM_TURN) {
         if (reflectAllowed() && !isCloaked() && !isReflecting() && countEnemyBotsWithinDist(x, y, 5, 5) >= 1) reflect()
