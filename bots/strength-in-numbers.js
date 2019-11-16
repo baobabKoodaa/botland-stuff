@@ -9,17 +9,10 @@ init = function() {
 }
 
 update = function() {
-
-
-
     commonStateUpdates()
+    updateEnemyLocations()
 
     if (turn >= 4) return
-
-    array2 = sharedB
-
-    // Tracking updates
-    updateEnemyLocations()
     if (turn == 1) {
         // TODO: if total number of known enemies is < 3, assume that some bots are lurking in corners
     }
@@ -47,23 +40,43 @@ actM = function() {
     }
 }
 
+isGuardian = function() {
+    return startX >= 7
+}
+
+isBackupGuardian = function() {
+    return startY == 2 || startY == 8
+}
+
 actR = function() {
     // TODO shield requestien pitäis lähteä vasta ennen terminaattoria! jos ukko movee, teleporttaa tai chargee ni pitäis kirjata requestiin oletettu tuleva sijainti! samasta syystä myös muiden terminaattorien yhteydessä pitäis lähettää shield req
     askForShield(currDistToClosestBot, turn, x, y)
     if (turn == 1) {
-        if (x >= 7) {
-            // Anti-CPU rush
-            tryMelee(x+2, y) // More important than immediate zapping!
+        if (isGuardian()) {
+            // TODO flag potential CPU rushes
+
+            // Note that we don't have to prevent immediate death for other units on turn 1 because they are within EMP protection range.
+            preventImmediateDeath()
+
+            // Prefer charging towards CPU or vertical center, as we get to move closer & melee in 1 turn!
+            tryMelee(x+2, y)
+            tryMelee(x, y-2)
+            tryMelee(x, y+2)
+
+            // If we can't charge, and there are multiple enemies within 2 dist, let's zap.
             if (countEnemyBotsWithinDist(x, y, 1, 2) >= 2) {
                 // Zap is better than melee.
                 if (canZap()) zap()
             }
-            tryMelee(x, y-2)
-            tryMelee(x, y+2)
+
+            // If there is only single adjacent enemy, melee it.
             tryMelee(x+1, y)
             tryMelee(x, y-1)
             tryMelee(x, y+1)
-            preventImmediateDeath() // Note that we don't have to prevent immediate death for other units on turn 1 because they are within EMP protection range.
+            tryMelee(x-1, y)
+        }
+        if (isBackupGuardian()) {
+            // TODO if we cant see the main guardian that we're supposed to see, flag CPU rush.
         }
         // TODO if 3 enemies are in the middle, ALL R's should jump in & fight immediately.
         // TODO if 1-2 enemies are in the middle, the left-most R and the 2 closest R's should jump in & fight immediately. Other R's should defend CPU
@@ -72,27 +85,25 @@ actR = function() {
         if (canReflect()) reflect()
         if (canShield()) tryToShieldSomeone()
 
-        // Fallback which happens only if cooldowns carry-over from previous round.
-        fallbackToSomethingUseful()
+        n()
     }
     if (turn == 2) {
+        // TODO defensive teleport in case of CPU rush
         maybeTryToDecloakAdjacentEnemies()
-
-        // Typical case. TODO: check that we can actually teleport into battle, otherwise walk towards the fight
-        if (canZap()) zap()
-
-        // Fallback which happens if enemy EMP'd our zap or if cooldowns carry-over from previous round.
-        fallbackToSomethingUseful()
-    }
-    if (turn == 3) {
-        // TODO Offensive teleport or defensive teleport (in case of CPU rush)
-        // Remember to use shared knowledge of enemy positions when choosing teleport target.
     }
 
+    // Normal flow.
+    if (turn >= 3) {
+        if (willMeleeHit()) melee()
+    }
+    maybeTryToDecloakAdjacentEnemies()
+    if (canReflect()) reflect()
+    if (canZap()) zap() // TODO: check that we can actually teleport into battle, otherwise walk closer before activating zapper.
+    // TODO offensive teleport (Remember to use shared knowledge of enemy positions when choosing teleport target.)
 }
 
 maybeTryToDecloakAdjacentEnemies = function() {
-    // if enemy was next to us last turn, but has now disappeared, then move into the square which was occupied by the enemy.
+    // If enemy was next to us last turn, but has now disappeared, then move into the square which was occupied by the enemy.
     enc = decloakHelper()
     if (enc) {
         ex = decodeX(enc)
@@ -105,7 +116,7 @@ fallbackToSomethingUseful = function() {
     if (willMeleeHit()) melee()
     if (canReflect()) reflect()
     if (canShield()) tryToShieldSomeone()
-    wait() // TODO something choose when to pursue enemies or go to CPU.
+    w() // TODO something choose when to pursue enemies or go to CPU.
 }
 
 actE = function() {
@@ -202,34 +213,34 @@ tryToBreakMeleeCardinality = function() {
 teleportEscape = function() {
     // TODO check distance to enemy bots when choosing teleport location
     if (y <= arenaHeight/2) {
-        tryTeleport(x+5, y)
-        tryTeleport(x+4, y+1)
-        tryTeleport(x+3, y+2)
-        tryTeleport(x+4, y-1)
-        tryTeleport(x+3, y-2)
-        tryTeleport(x+4, y)
-        tryTeleport(x+2, y+3)
-        tryTeleport(x+2, y-3)
-        tryTeleport(x+1, y+4)
-        tryTeleport(x+1, y-4)
-        tryTeleport(x, y+5)
-        tryTeleport(x, y-5)
-        tryTeleport(x-1, y+4)
-        tryTeleport(x-1, y-4)
+        t(x+5, y)
+        t(x+4, y+1)
+        t(x+3, y+2)
+        t(x+4, y-1)
+        t(x+3, y-2)
+        t(x+4, y)
+        t(x+2, y+3)
+        t(x+2, y-3)
+        t(x+1, y+4)
+        t(x+1, y-4)
+        t(x, y+5)
+        t(x, y-5)
+        t(x-1, y+4)
+        t(x-1, y-4)
     } else {
-        tryTeleport(x+5, y)
-        tryTeleport(x+4, y-1)
-        tryTeleport(x+3, y-2)
-        tryTeleport(x+4, y+1)
-        tryTeleport(x+3, y+2)
-        tryTeleport(x+4, y)
-        tryTeleport(x+2, y-3)
-        tryTeleport(x+2, y+3)
-        tryTeleport(x+1, y-4)
-        tryTeleport(x+1, y+4)
-        tryTeleport(x, y-5)
-        tryTeleport(x, y+5)
-        tryTeleport(x-1, y-4)
-        tryTeleport(x-1, y+4)
+        t(x+5, y)
+        t(x+4, y-1)
+        t(x+3, y-2)
+        t(x+4, y+1)
+        t(x+3, y+2)
+        t(x+4, y)
+        t(x+2, y-3)
+        t(x+2, y+3)
+        t(x+1, y-4)
+        t(x+1, y+4)
+        t(x, y-5)
+        t(x, y+5)
+        t(x-1, y-4)
+        t(x-1, y+4)
     }
 }
