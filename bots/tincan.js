@@ -184,7 +184,6 @@ hitAndRunGank = function() {
             n()
         } else {
             // We probably killed the enemy target since no enemy is near our previously set target. Try to run.
-            clearSharedTarget()
             askAlliesToWaitForUsToRepair() // This is a hack to prevent whipsaw where some bots need heal and others dont and the needing-heal-bots dont have a chance to say they need a heal before another bot thinks no-one needs heal.
             hitAndRunRetreat()
         }
@@ -194,7 +193,6 @@ hitAndRunGank = function() {
     assignNewSharedTarget()
     if (!weHaveSharedTarget()) {
         // We have killed the target or it has cloaked, teleported, or moved out of range AND we see no other targets anywhere.
-        clearSharedTarget()
         askAlliesToWaitForUsToRepair() // This is hacky.
         hitAndRunRetreat()
     }
@@ -239,6 +237,7 @@ hitAndRunRetreat = function() {
         ey = getY(closestEnemy)
         if (d(REPAIR_X, REPAIR_Y, ex, ey) <= 7 || (d(x, y, REPAIR_X, REPAIR_Y) <= 4 && dmgTaken > 100)) {
             // Repair interrupted if enemy is seen close to repair line _or_ we are taking damage at or behind repair line (from arty at 7 range probably)
+            clearSharedTarget()
             tellAlliesEnemyNearRepairStation()
         }
     }
@@ -308,6 +307,7 @@ hitAndRunRetreat = function() {
         }
     } else {
         // We don't need more repair, our teammates don't need more repair. Assume our cooldowns are ok too.
+        clearSharedTarget()
         hitAndRunFindTarget()
     }
     n("r")
