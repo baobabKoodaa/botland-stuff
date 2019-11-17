@@ -177,7 +177,7 @@ hitAndRunGank = function() {
         moveCloser(ex, ey)
         n()
     }
-    if (countEnemyBotsWithinDist(ex, ey, 0, 2) == 0) {
+    if (countEnemyBotsWithinDist(ex, ey, 0, 1) == 0) {
         if (getDistanceTo(ex, ey) == 5) {
             // Enemy probably just moved out of sight.
             moveCloser(ex, ey)
@@ -334,8 +334,8 @@ shouldWeRetreat = function() {
     }
 
     // Normal case: if we predict we'll have less life than threshold on next turn, then we should teleport away now.
-    predictedDmg = max(500, dmgTaken)
-    if (countEnemyBotsWithMeleeCardinality(x, y) >= 2) predictedDmg += 300
+    dmgPredictionFromNumberOfNearbyEnemies = 500 * countEnemyBotsWithinDist(x, y, 1, 1) + 300 * countEnemyBotsWithinDist(x, y, 2, 2)
+    predictedDmg = max(500, dmgTaken, dmgPredictionFromNumberOfNearbyEnemies)
     predictedLife = currLife - predictedDmg
     safetyThreshold = determineSafetyThreshold()
     return predictedLife < safetyThreshold
@@ -539,7 +539,7 @@ startSpecialRon2 = function() {
         if (canZap()) zap()
         if (canReflect()) reflect()
     }
-    if (turn <= 5) {
+    if (turn <= 4) {
         meleeAnythingButDontCharge()
         w()
     }
