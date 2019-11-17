@@ -45,10 +45,10 @@ darklingSpecial = function() {
     if (turn <= 4) {
         m(x-1, y)
     }
-    if (turn <= 6) {
+    if (turn == 5) {
         if (willMissilesHit()) fireMissiles()
     }
-    if (turn == 7) {
+    if (turn == 6) {
         if (canEmp()) emp('MELEE')
     }
 }

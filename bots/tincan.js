@@ -48,7 +48,7 @@ update = function() {
     //startSpecialDarklingArcher3()
     //startSpecialJuanjoBait()
     //startSpecialForwMines()
-    startSpecialBackwmines()
+    //startSpecialBackwmines()
     //startSpecialAttackForwardEvenIfNoVisibility(0)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
@@ -700,9 +700,11 @@ startSpecialDarklingArcher3 = function() {
     if (turn == 1) w()
     if (turn == 2) layMine()
     if (turn <= 4) m(x-1, y)
-    if (turn <= 6) {
-        if (canReflect()) reflect()
+    if (turn <= 7) {
         if (canZap()) zap()
+        tryMelee(x+2, y)
+        if (willMeleeHit()) melee()
+        if (canReflect()) reflect()
     }
 }
 
