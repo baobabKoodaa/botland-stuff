@@ -46,7 +46,8 @@ update = function() {
 
     //startSpecialRonBait()
     //startSpecialDarklingArcher3()
-    startSpecialJuanjoBait()
+    //startSpecialJuanjoBait()
+    startSpecialZaharid()
     //startSpecialForwMines()
     //startSpecialBackwmines()
     //startSpecialAttackForwardEvenIfNoVisibility(1)
@@ -641,6 +642,26 @@ startSpecialJuanjoBait = function() {
     if (turn <= 2) w()
     if (turn <= 4) m(x-1, y)
     if (turn <= 8) {
+        if (canZap() && currDistToClosestBot <= 2) zap()
+        meleeAnythingButDontCharge()
+    }
+    if (turn <= 7) w()
+    if (turn <= 9) {
+        t(x-5, y)
+        t(x-4, y-1)
+        t(x-4, y+1)
+    }
+    if (turn <= 14) {
+        m(x-1, y)
+        w()
+    }
+}
+
+startSpecialZaharid = function() {
+    if (turn == 1) w()
+    if (turn <= 3) m(x-1, y)
+    if (turn <= 8) {
+        if (canReflect()) reflect()
         if (canZap() && currDistToClosestBot <= 2) zap()
         meleeAnythingButDontCharge()
     }
