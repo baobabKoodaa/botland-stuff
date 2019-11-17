@@ -17,7 +17,7 @@ init = function() {
     MODE_NORMAL = 3
 
     // backwmine related
-    BACKW_MINES_STALL = false
+    BACKW_MINES_STALL = true
 
     // hitnrun related
     MODE_FIND_TARGET = 1
@@ -47,14 +47,14 @@ update = function() {
     //startSpecialRonBait()
     //startSpecialDarklingArcher3()
     //startSpecialJuanjoBait()
-    startSpecialZaharid()
+    //startSpecialZaharid()
     //startSpecialForwMines()
     //startSpecialBackwmines()
     //startSpecialAttackForwardEvenIfNoVisibility(1)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
     //startSpecialRon3()
-    //if (turn < 150) hitAndRun()
+    if (turn < 150) hitAndRun()
 
     normalActions()
 }
@@ -234,9 +234,13 @@ hitAndRunRetreat = function() {
     mode = MODE_RETREAT_REPAIR
     distToRepair = getDistanceTo(REPAIR_X, REPAIR_Y)
     closestEnemy = findEntity(ENEMY, BOT, SORT_BY_DISTANCE, SORT_ASCENDING)
-    if ((exists(closestEnemy) && getX(closestEnemy) <= REPAIR_X+5) || (x <= REPAIR_X+1 && dmgTaken > 100)) {
-        // Repair interrupted if enemy is seen close to repair line _or_ we are taking damage at or behind repair line (from arty at 7 range probably)
-        tellAlliesEnemyNearRepairStation()
+    if (exists(closestEnemy)) {
+        ex = getX(closestEnemy)
+        ey = getY(closestEnemy)
+        if (d(REPAIR_X, REPAIR_Y, ex, ey) <= 7 || (d(x, y, REPAIR_X, REPAIR_Y) <= 4 && dmgTaken > 100)) {
+            // Repair interrupted if enemy is seen close to repair line _or_ we are taking damage at or behind repair line (from arty at 7 range probably)
+            tellAlliesEnemyNearRepairStation()
+        }
     }
     if (isEnemyNearRepairStation()) {
         fightEnemyNearRepairStation()
