@@ -15,21 +15,59 @@ function parseImports(bot) {
     return imports
 }
 
-function detectFunctionAndAttributeNames(minifiedJSFileContent) {
-    for (var i=0; i<minifiedJSFileContent.length; i++){
-        var line = minifiedJSFileContent[i]
-        if (line.includes(' = ')) {
-            thing = line.split(' =')[0]
-            if (!thing.includes(" ")) { // e.g. for (i=...
-                // TODO collect into a set
-                // TODO remove API endpoints
-                // TODO minify in order of high length to low length (because some attribute names may be also part of a longer attribute name)
-                // TODO manually minify most common names like m -> m ?
-                // TODO replace literals with their actual values (careful to make sure the variable is defined only once!)
-                //console.log(thing)
+function countBrackets(line) {
+    countOpen = (line.match(/{/g) || []).length
+    countClose = (line.match(/}/g) || []).length
+    return countOpen - countClose
+}
+
+function separateFunctions(arr) {
+    var functions = {}
+    var balance = 0
+    var name = ""
+    for (var j=0; j<arr.length; j++) {
+        line = arr[j]
+        if (line.includes("=function")) {
+            name = line.split("=function")[0]
+            if (functions[name]) error("Error! Potentially duplicate function definition discovered for", name)
+            if (balance != 0) error("Error in separateFunctions (possibly unexpected syntax discovered).")
+            functions[name] = []
+        }
+        balance += countBrackets(line)
+        functions[name].push(line)
+    }
+    return functions
+}
+
+function error(s) {
+    throw new Error(s)
+}
+
+function removeUnusedFunctions(functions, APIendpoints) {
+    var linesFromUsedFunctions = []
+    var functionsToProcess = ['init', 'update'] // we append this as we discover more called functions
+    for (var i=0; i<functionsToProcess.length; i++) {
+        var currName = functionsToProcess[i]
+        var currFunc = functions[currName]
+        for (var j=0; j<currFunc.length; j++) {
+            var line = currFunc[j]
+            linesFromUsedFunctions.push(line)
+
+            // Try to recognize other functions which we call from this function
+            var splitted = line.split('(')
+            for (var k=0; k<splitted.length-1; k++) {
+                var splitted2 = splitted[k].split(/[\s,\+\-\*\\\=!]+/)
+                var otherName = splitted2[splitted2.length-1]
+                if (['function', 'if', ''].includes(otherName)) continue
+                if (APIendpoints[otherName]) continue
+                if (!functions[otherName]) error("Error! Unrecognized function " + otherName)
+                if (functionsToProcess.includes(otherName)) continue
+                functionsToProcess.push(otherName)
+                //console.log("Recognized function", otherName)
             }
         }
     }
+    return linesFromUsedFunctions
 }
 
 function minify(jsFileContent) {
@@ -56,8 +94,14 @@ function minify(jsFileContent) {
 }
 
 function minifyBotFile(bot) {
-    const filepath = path.resolve("bots", bot+".js");
-    var content = fs.readFileSync(filepath, 'utf8');
+    const filepath = path.resolve("bots", bot+".js")
+    var content = fs.readFileSync(filepath, 'utf8')
+    return minify(content)
+}
+
+function minifyAPIendpoints() {
+    const filepath = path.resolve("dummyAPIendpoints.js")
+    var content = fs.readFileSync(filepath, 'utf8')
     return minify(content)
 }
 
@@ -95,20 +139,6 @@ function countCharacters(arr) {
     return count;
 }
 
-function assertNoDuplicateFunctionDefinitions(arr) {
-    functionNames = new Set()
-    for (var j=0; j<arr.length; j++) {
-        line = arr[j]
-        if (line.includes(" = function")) {
-            var name = line.split(" ")[0]
-            if (functionNames.has(name)) {
-                console.log("Warning! Potentially duplicate function definition discovered for", name);
-            }
-            functionNames.add(name)
-        }
-    }
-}
-
 function printLines(arr) {
     for (var j=0; j<arr.length; j++) {
         line = arr[j]
@@ -131,12 +161,15 @@ minifiedBotFile = minifyBotFile(bot)
 minifiedCommonFiles = minifyCommonFiles(imports)
 minifiedFiles = minifiedBotFile.concat(minifiedCommonFiles)
 
-// Additional checks.
-chars = countCharacters(minifiedFiles)
-assertNoDuplicateFunctionDefinitions(minifiedFiles)
+// Remove unused functions.
+functions = separateFunctions(minifiedFiles)
+APIendpoints = separateFunctions(minifyAPIendpoints())
+prunedFunctions = removeUnusedFunctions(functions, APIendpoints)
+// TODO minify in order of high length to low length (because some attribute names may be also part of a longer attribute name)
+// TODO replace literals with their actual values (careful to make sure the variable is defined only once!)
 
-// WIP
-detectFunctionAndAttributeNames(minifiedFiles)
+// Additional checks.
+chars = countCharacters(prunedFunctions)
 
 console.log('/*******************', bot, chars, 'characters ******************/\n\n')
-printLines(minifiedFiles)
+printLines(prunedFunctions)
