@@ -53,7 +53,7 @@ update = function() {
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
     //startSpecialRon3()
-    //if (turn < 150) hitAndRun()
+    if (turn < 150) hitAndRun()
 
     normalActions()
 }
@@ -243,7 +243,7 @@ hitAndRunRetreat = function() {
     if (!REPAIR_AVAILABLE) {
         hitAndRunFindTarget()
     }
-    if (currLife < 1900) {
+    if (currLife < 1900 || !canZap()) {
         askAlliesToWaitForUsToRepair()
         if (distToRepair > 1) {
             if (canCloak() && !isCloaked()) {
