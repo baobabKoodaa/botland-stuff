@@ -17,7 +17,7 @@ init = function() {
     MODE_NORMAL = 3
 
     // backwmine related
-    BACKW_MINES_STALL = false
+    BACKW_MINES_STALL = true
 
     // hitnrun related
     MODE_FIND_TARGET = 1
@@ -48,11 +48,11 @@ update = function() {
     //startSpecialDarklingArcher3()
     //startSpecialJuanjoBait()
     //startSpecialForwMines()
-    //startSpecialBackwmines()
+    startSpecialBackwmines()
     //startSpecialAttackForwardEvenIfNoVisibility(0)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
-    startSpecialRon3()
+    //startSpecialRon3()
     //if (turn < 150) hitAndRun()
 
     normalActions()
@@ -841,20 +841,23 @@ fight = function() {
     maybeFinishOff(target)
     if (reflectAllowed()) reflect()
     if (ALTERNATE_REFLECT_CLOAK && !isReflecting() && canCloak()) cloak()
-    maybeZap(target);
-    maybeTeleportIntoEnemies(target);
+    maybeZap(target)
+    maybeTeleportIntoEnemies(target)
 
     if (willMeleeHit(target)) {
-        melee(target);
+        melee(target)
     }
-    m(target); // TODO try to gain cardinality to charge?
+    m(target) // TODO try to gain cardinality to charge?
+    n("fight")
 }
 
 goAfterCPUandChips = function() {
     target = findEntity(ENEMY, CHIP | CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     if (!exists(target)) {
         maybeSensors()
-        m(xCPU, yCPU)
+        if (x < xCPU) m(x+1, y)
+        if (y < yCPU) m(x, y+1)
+        if (y > yCPU) m(x, y-1)
     }
     if (willMeleeHit(target)) {
         melee(target)
@@ -864,6 +867,7 @@ goAfterCPUandChips = function() {
         move()
     }
     m(target)
+    n("go")
 }
 
 zapAllowed = function() {
@@ -912,7 +916,7 @@ chooseTarget = function() {
 
 maybeSensors = function() {
     if (sensorsAllowed() && canActivateSensors()) {
-        activateSensors();
+        activateSensors()
     }
 }
 
