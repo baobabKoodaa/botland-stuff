@@ -44,6 +44,7 @@ update = function() {
 
     commonStateUpdates()
 
+    startSpecialCrayIton()
     //startSpecialRonBait()
     //startSpecialDarklingArcher3()
     //startSpecialJuanjoBait()
@@ -54,7 +55,7 @@ update = function() {
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
     //startSpecialRon3()
-    if (turn < 150) hitAndRun()
+    //if (turn < 150) hitAndRun()
 
     normalActions()
 }
@@ -533,6 +534,17 @@ fightEnemyNearRepairStation = function() {
 }
 
 /*************************************************** Various start specials **********************************************************/
+
+startSpecialCrayIton = function() {
+    if (turn == 1) cloak()
+    if (turn <= 3) m(x+1, y)
+    if (turn <= 6) {
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+        t(x+5, y)
+        probablyTeleportToBestOffensiveTeleportLocation()
+    }
+}
 
 startSpecialRon2 = function() {
     if (mode) return
