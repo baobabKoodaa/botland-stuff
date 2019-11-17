@@ -183,15 +183,10 @@ hitAndRunGank = function() {
             moveCloser(ex, ey)
             n()
         } else {
-            // We probably killed the enemy target since no enemy is near our previously set target. Run unless we are fighting some other enemy.
-            if (currDistToClosestBot >= 2) { // TODO need to consider minDistOfAnyFriendlyToAnyEnemy
-                clearSharedTarget()
-                askAlliesToWaitForUsToRepair() // This is a hack to prevent whipsaw where some bots need heal and others dont and the needing-heal-bots dont have a chance to say they need a heal before another bot thinks no-one needs heal.
-                hitAndRunRetreat()
-            } else {
-                // We are engaged with some other enemy, make it the new target.
-                assignNewSharedTarget()
-            }
+            // We probably killed the enemy target since no enemy is near our previously set target. Try to run.
+            clearSharedTarget()
+            askAlliesToWaitForUsToRepair() // This is a hack to prevent whipsaw where some bots need heal and others dont and the needing-heal-bots dont have a chance to say they need a heal before another bot thinks no-one needs heal.
+            hitAndRunRetreat()
         }
 
     }
