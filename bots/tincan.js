@@ -115,13 +115,12 @@ hitAndRunFindTarget = function() {
     }
     if (canReflect() && dmgTaken > 100) reflect()
     // All tincans should try to maintain 4 dist to target.
-    dx = abs(x - ex) // These were overwritten by allNearbyFr... so we need to set them again
-    dy = abs(y - ey) // These were overwritten by allNearbyFr... so we need to set them again
-    if (dx+dy > 4) {
+    dist = d(x, y, ex, ey)
+    if (dist > 4) {
         moveCloser(ex, ey)
-    } else if (dx+dy < 4) {
+    } else if (dist < 4) {
         moveFurther(ex, ey)
-    } else if (dx+dy == 4) {
+    } else if (dist == 4) {
         // Prevent deadlocks
         move()
     }
@@ -202,12 +201,17 @@ hitAndRunGank = function() {
     target = getSharedTargetEntity()
     ex = getSharedTargetX()
     ey = getSharedTargetY()
-    dx = abs(x - ex)
-    dy = abs(y - ey)
     if (canReflect() && currDistToClosestBot >= 3) reflect()
     if (canZap()) zap()
     if (!willMeleeHit(target) && turn == coordinatedGankTeleportTurn()) {
         // TODO if the target has moved backward, some of our tincans will be able to teleport to only some of the locations; we need to coordinate who teleports where so that we guarantee that all tincans will be able to teleport next to target.
+
+        // Special case: we can step next to target.
+        if (getDistanceTo(ex, ey) == 2) {
+            if (canMoveTo(x-1, y) && d(x-1, y, ex, ey) == 1) m(x-1, y)
+
+        }
+        // Normal case: teleport next to target.
         t(ex - 1, ey)
         t(ex, ey-1)
         t(ex, ey+1)
@@ -393,10 +397,7 @@ scoreTargetCandidate = function(targetCandidate) {
 
 scoreTargetDist = function(ex, ey, fnx, fny) {
     if (fnx >= 0) { // May be undefined!
-        dx = abs(ex - fnx)
-        dy = abs(ey - fny)
-        scoreTCDist = 1000*(dx+dy)
-        return scoreTCDist
+        return 1000 * d(ex, ey, fnx, fny)
     }
     // If this friendly bot doesn't exist, all candidates will be affected the same way regardless if this value is 0 or something else.
     return 0
@@ -494,9 +495,7 @@ allNearbyFriendliesCanTeleportToTarget = function(ex, ey) {
         fy = getY(array1[i])
         if (fy >= y-2) {
             // Friendlies further behind than this are probably repair/support units.
-            dx = abs(ex - fx)
-            dy = abs(ey - fy)
-            if (dx+dy > 4) {
+            if (d(ex, ey, fx, fy) > 4) {
                 // This could be 6, but we don't want to deal with edge cases so we set this at 5. Even this may cause us problematic edge cases sometimes.
                 return false
             }
@@ -882,9 +881,7 @@ chooseTarget = function() {
         ey = getY(array1[i])
         lifeE = getLife(array1[i])
         canMeleeE = willMeleeHit(array1[i])
-        dx = abs(ex - x)
-        dy = abs(ey - y)
-        distE = dx+dy
+        distE = d(x, y, ex, ey)
 
         scoreE = 0;
         if (canMeleeE) scoreE += 100000 // good if we can melee

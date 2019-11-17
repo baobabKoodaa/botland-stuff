@@ -61,10 +61,9 @@ specialActions = function() {
     if (turn == SS_REFLECT_TURN && canReflect()) reflect()
     if (canShield()) shield()
 
-    d = distToClosestEnemyBot(x, y)
     if (FORWARD_MINE_ATTACKS && probablyHasLandMines()) {
         // Start/continue laying forward mines if we don't see enemies
-        if (d > 5 && forwardMinesState == 0 && countForwardMineAttacks < FORWARD_MINE_ATTACKS) {
+        if (currDistToClosestBot > 5 && forwardMinesState == 0 && countForwardMineAttacks < FORWARD_MINE_ATTACKS) {
             forwardMinesState += 1
             countForwardMineAttacks += 1
         }
@@ -75,19 +74,19 @@ specialActions = function() {
         }
 
         if (forwardMinesState == 1) {
-            if (d <= 5 && reflectAllowed()) reflect()
+            if (currDistToClosestBot <= 5 && reflectAllowed()) reflect()
             if (canTeleport()) {
-                if (d < 3) {
+                if (currDistToClosestBot < 3) {
                     forwardMinesState = 2
                     triggerCoordinatedTeleport()
                     tryDefensiveTeleport()
                 }
-                if (d >= 3) {
+                if (currDistToClosestBot >= 3) {
                     if (canLayMine()) layMine();
                     if (canMove('right')) move('right');
                 }
             } else {
-                if (d >= 5) {
+                if (currDistToClosestBot >= 5) {
                     if (canLayMine()) layMine();
                     if (canMove('right')) move('right');
                 } else {
@@ -99,9 +98,9 @@ specialActions = function() {
 
         }
         if (forwardMinesState == 2) {
-            if (d <= 3 && canMove('left')) move('left')
-            if (d <= 4 && willMissilesHit()) fireMissiles()
-            if (d >= 5) {
+            if (currDistToClosestBot <= 3 && canMove('left')) move('left')
+            if (currDistToClosestBot <= 4 && willMissilesHit()) fireMissiles()
+            if (currDistToClosestBot >= 5) {
                 if (canLayMine()) layMine()
                 if (canActivateSensors()) activateSensors()
                 else forwardMinesState = 0

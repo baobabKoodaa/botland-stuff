@@ -78,7 +78,5 @@ maybeMelee = function(cx, cy) {
     if (!exists(meleeTarget)) return
     if (!willMeleeHit(meleeTarget)) return
     // No charging allowed except on CPU!
-    dx = abs(x-cx)
-    dy = abs(y-cy)
-    if (dx+dy == 1) melee(meleeTarget)
+    if (d(x, y, cx, cy) == 1) melee(meleeTarget)
 }

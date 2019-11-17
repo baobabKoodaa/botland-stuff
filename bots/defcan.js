@@ -81,9 +81,7 @@ targetNearDanger = function(target) {
     if (!sharedC) return
     ex = getX(target)
     ey = getY(target)
-    dx = abs(ex - sharedC)
-    dy = abs(ey - sharedD)
-    if (dx+dy <= 2) return true
+    if (d(ex, ey, sharedC, sharedD) <= 2) return true
     return false
 }
 
@@ -157,9 +155,7 @@ chooseTarget = function() {
         ey = getY(array1[i])
         lifeE = getLife(array1[i])
         canMeleeE = willMeleeHit(array1[i])
-        dx = abs(ex - x)
-        dy = abs(ey - y)
-        distE = dx+dy
+        distE = d(x, y, ex, ey)
 
         scoreE = 0;
         if (canMeleeE) scoreE += 100000 // good if we can melee

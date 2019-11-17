@@ -1,11 +1,20 @@
+/** n, as in "this should Never execute".
+ *  Used to flag bugs with taunt crying emoji. */
 n = function(msg) {
-    // Flag a bug with taunt crying emoji.
     debugLog('ERROR turn', turn, "at", x, y, "msg", msg)
     taunt('CRYING')
 }
 
+/** w, as in "wait". */
 w = function() {
     taunt('THUMBS_UP')
+}
+
+/** d, as in "distance". */
+d = function(ax, ay, bx, by) {
+    dx = abs(ax - bx)
+    dy = abs(ay - by)
+    return dx+dy
 }
 
 moveTowards = function(cx, cy) {
@@ -92,9 +101,8 @@ countEnemyBotsWithinDist = function(cx, cy, minDist, maxDist) {
     for (i = 0; i < size(array1); i++) {
         ex = getX(array1[i])
         ey = getY(array1[i])
-        dx = abs(ex - cx)
-        dy = abs(ey - cy)
-        if (dx+dy >= minDist && dx+dy <= maxDist) c += 1
+        dist = d(cx, cy, ex, ey)
+        if (dist >= minDist && dist <= maxDist) c += 1
     }
     return c;
 }
@@ -105,9 +113,8 @@ distToClosestEnemyBot = function(cx, cy) {
     for (i = 0; i < size(array1); i++) {
         ex = getX(array1[i])
         ey = getY(array1[i])
-        dx = abs(ex - cx)
-        dy = abs(ey - cy)
-        if (dx+dy < lowestDist) lowestDist = dx+dy
+        dist = d(cx, cy, ex, ey)
+        if (dist < lowestDist) lowestDist = dist
     }
     return lowestDist
 }
@@ -118,9 +125,8 @@ friendlyBotsWithinDist = function(cx, cy, minDist, maxDist) {
     for (i = 0; i < size(array1); i++) {
         ex = getX(array1[i])
         ey = getY(array1[i])
-        dx = abs(ex - cx)
-        dy = abs(ey - cy)
-        if (dx+dy >= minDist && dx+dy <= maxDist) c += 1
+        dist = d(cx, cy, ex, ey)
+        if (dist >= minDist && dist <= maxDist) c += 1
     }
     return c;
 }
@@ -143,12 +149,11 @@ countEnemyBotsWithMeleeCardinality = function(cx, cy) {
 }
 
 hasMeleeCardinality = function(cx, cy, ex, ey) {
-    dx = abs(ex - cx)
-    dy = abs(ey - cy)
-    if (dx+dy == 1) {
+    dist = d(cx, cy, ex, ey)
+    if (dist == 1) {
         // Dist 1.
         return true
-    } else if (dx+dy == 2 && dx!=dy) {
+    } else if (dist == 2 && dist) {
         // Charging is possible by range and cardinality. Next we check if charging path is blocked.
         if (ex == cx-2 && !getEntityAt(cx-1, cy)) return true // TODO chips are considered to be blocking. fix that.
         else if (ex == cx+2 && !getEntityAt(cx+1, cy)) return true
@@ -163,29 +168,6 @@ hasMeleeCardinality = function(cx, cy, ex, ey) {
     }
     return false
 }
-
-
-
-
-
-// Returns 1 if we can fire lasers at any enemy bot from given coordinates.
-/*
-canFireLasers = function(cx, cy) {
-    array1 = findEntities(ENEMY, BOT, false)
-    for (i = 0; i < size(array1); i++) {
-        ex = getX(array1[i])
-        ey = getY(array1[i])
-        dx = abs(ex - cx)
-        dy = abs(ey - cy)
-        if (dx+dy <= 5) {
-            if (ex == cx) return 1
-            if (ey == cy) return 1
-        }
-    }
-    return 0
-}
-*/
-
 
 
 

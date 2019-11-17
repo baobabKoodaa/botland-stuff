@@ -147,10 +147,9 @@ scoreTargetCandidate = function(targetCandidate) {
 
 scoreTargetDist = function(ex, ey, fx, fy) {
     if (fx >= 0) { // May be undefined!
-        dx = abs(ex - fx)
-        dy = abs(ey - fy)
-        scoreTCDist = 50*(dx+dy)
-        if (dx+dy > FIRING_DISTANCE) scoreTCDist += 150
+        tcDist = d(ex, ey, fx, fy)
+        scoreTCDist = 50 * tcDist
+        if (tcDist > FIRING_DISTANCE) scoreTCDist += 150
         return scoreTCDist
     }
     // If this friendly bot doesn't exist, all candidates will be affected the same way regardless if this value is 0 or something else.

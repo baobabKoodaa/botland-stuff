@@ -57,27 +57,27 @@ refreshGoal = function() {
 tryToSneakOnTarget = function() {
     refreshGoal()
 
-    d = getDistanceTo(goalX, goalY)
-    if (d == 8) {
+    gd = getDistanceTo(goalX, goalY)
+    if (gd == 8) {
         if (!canCloak()) w()
         m(x+1, y)
     }
     /*
-    if (d == 7) {
+    if (gd == 7) {
         m(x+1, y)
     }
-    if (d == 6) {
+    if (gd == 6) {
         if (!isCloaked() && canCloak()) cloak()
         m(x+1, y)
     }*/
-    if (d == 7) {
+    if (gd == 7) {
         if (!isCloaked() && canCloak()) cloak()
         m(x+1, y)
     }
-    if (d == 6) {
+    if (gd == 6) {
         m(x+1, y)
     }
-    if (d == 5) {
+    if (gd == 5) {
         if (currDistToClosestBot == 5) {
             // We can see the enemy that we expected to be there
             if (isCloaked()) {

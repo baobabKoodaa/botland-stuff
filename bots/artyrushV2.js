@@ -72,16 +72,15 @@ update = function() {
 
     if (!exists(target) || !willArtilleryHit(target)) {
         // If we can't fire at target let's try to get to 5 distance of it
-        dx = abs(x - ex)
-        dy = abs(y - ey)
-        if (dx+dy > 5) {
+        dist = d(x, y, ex, ey)
+        if (dist > 5) {
             // Need to move closer.
             if (x < ex) m(x+1, y)
             if (y < ey) m(x, y+1)
             if (y > ey) m(x, y-1)
             if (x < ex+1) m(x+1, y) // Right edge of map is a good place to be.
             if (x > ex) m(x-1, y)
-        } else if (dx+dy < 5) {
+        } else if (dist < 5) {
             // Need to move further
             if (x > ex) m(x+1, y)
             if (y > ey) m(x, y+1)
@@ -161,9 +160,7 @@ initGoalToNothing = function() {
 tryToSetGoal = function(cx, cy) {
     if (goalX > 0) return // A goal has already been set.
     if (outOfBounds(cx, cy)) return
-    dx = abs(cx - ex)
-    dy = abs(cy - ey)
-    if (dx+dy == 5) {
+    if (d(cx, cy, ex, ey) == 5) {
         goalX = cx
         goalY = cy
     }
