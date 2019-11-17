@@ -59,7 +59,10 @@ function removeUnusedFunctions(functions, APIendpoints) {
                 var splitted2 = splitted[k].split(/[\s,\+\-\*\\\=!]+/)
                 var otherName = splitted2[splitted2.length-1]
                 if (['function', 'if', ''].includes(otherName)) continue
-                if (APIendpoints[otherName]) continue
+                if (APIendpoints[otherName]) {
+                    if (functions[otherName]) error('Error! Found custom function with same name as API endpoint ' + otherName)
+                    continue
+                }
                 if (!functions[otherName]) error("Error! Unrecognized function " + otherName)
                 if (functionsToProcess.includes(otherName)) continue
                 functionsToProcess.push(otherName)
