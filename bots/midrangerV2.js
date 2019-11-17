@@ -54,7 +54,7 @@ update = function () {
         retreatAndRepair()
     }
 
-    n()
+    n("upd")
 }
 
 retreatAndRepair = function() {
@@ -285,6 +285,10 @@ coordinatedAttackWithDodging = function() {
         tryMoveToIfSafe(x+1, y)
         tryOffensiveTeleport()
     }
+    if (canReflect() && currDistToClosestBot <= 5) {
+        maybeDodge()
+        reflect()
+    }
     if (canShield()) {
         maybeDodge()
         lowestLifeFriendly = findEntity(IS_OWNED_BY_ME, BOT, SORT_BY_LIFE, SORT_ASCENDING)
@@ -313,7 +317,7 @@ coordinatedAttackWithDodging = function() {
             } else if (getDistanceTo(ex, ey) > FIRING_DISTANCE) {
                 moveCloserOrSomething(ex, ey)
             } else {
-                n()
+                n("tar")
             }
         }
     }
@@ -357,7 +361,7 @@ moveCloserOrSomething = function(ex, ey) {
     maybeDodge()
     if (willMissilesHit()) {
         // Hit lowest health enemy in range
-        enemies = findEntitiesInRange(ENEMY, BOT, false, 4);
+        enemies = findEntitiesInRange(ENEMY, ANYTHING, false, 4);
         lowestHealthEnemy = filterEntities(enemies, [SORT_BY_LIFE], [SORT_ASCENDING]);
         if (exists(lowestHealthEnemy) && willMissilesHit(lowestHealthEnemy)) {
             fireMissiles(lowestHealthEnemy)
@@ -396,7 +400,7 @@ NFtryTeleportIfSafe = function(cx, cy) {
 
 tryOffensiveTeleport = function() {
     if (!canTeleport()) return
-    if (!weHaveSharedTarget()) n()
+    if (!weHaveSharedTarget()) n("wtf")
     // Try to maintain firing distance, avoid stepping on hot locations, minimize number of enemies in range
     ex = floor(sharedE / 100)
     ey = sharedE % 100
