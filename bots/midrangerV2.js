@@ -38,7 +38,7 @@ init = function() {
     commonInitProcedures()
     initializeHeatmap()
 
-    repairGoalX = max(0, startX-2)
+    repairGoalX = max(0, startX-4)
 }
 
 update = function () {
