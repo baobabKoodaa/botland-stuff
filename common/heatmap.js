@@ -4,7 +4,7 @@
  *		array2[i+2] = y coordinate of tile
  *		array2[i+3] = heat of tile
  *		Should be iterated from index 1 up to index indicated in array2[0] (exclusive).
- *		If array2[0] > 70 , then overflow to index 1 and start overwriting old stuff.
+ *		If array2[0] > 50 , then overflow to index 1 and start overwriting old stuff.
  */
 
 initializeHeatmap = function() {
@@ -22,7 +22,7 @@ initializeHeatmap = function() {
 findTileIndexFromHeatmap = function(cx, cy) {
 
     // Look up all tiles in heatmap, starting from the most recent update.
-    // First loop goes from recent to 0, second loop goes from 70 to recent.
+    // First loop goes from recent to 0, second loop goes from 50 to recent.
     for (i=array2[0]-1; i>=1; i-=4) {
         hx = array2[i+1];
         hy = array2[i+2];
@@ -30,7 +30,7 @@ findTileIndexFromHeatmap = function(cx, cy) {
             return i;
         }
     }
-    for (i=70; i>=array2[0]; i-=4) {
+    for (i=50; i>=array2[0]; i-=4) {
         hx = array2[i+1];
         hy = array2[i+2];
         if (hx == cx && hy == cy) {
@@ -75,7 +75,7 @@ updateHeatmapLocation = function(cx, cy, heatAmount) {
 
     // Update next free slot pointer.
     array2[0] = j+4
-    if (array2[0] > 70) {
+    if (array2[0] > 50) {
         // Overflow to rewrite old slots when we run out of space.
         array2[0] = 1
     }
