@@ -209,7 +209,9 @@ hitAndRunGank = function() {
         // Special case: we can step next to target.
         if (getDistanceTo(ex, ey) == 2) {
             if (canMoveTo(x-1, y) && d(x-1, y, ex, ey) == 1) m(x-1, y)
-
+            if (canMoveTo(x+1, y) && d(x+1, y, ex, ey) == 1) m(x+1, y)
+            if (canMoveTo(x, y-1) && d(x, y-1, ex, ey) == 1) m(x, y-1)
+            if (canMoveTo(x, y+1) && d(x, y+1, ex, ey) == 1) m(x, y+1)
         }
         // Normal case: teleport next to target.
         t(ex - 1, ey)
