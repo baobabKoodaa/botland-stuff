@@ -56,7 +56,7 @@ function removeUnusedFunctions(functions, APIendpoints) {
             // Try to recognize other functions which we call from this function
             var splitted = line.split('(')
             for (var k=0; k<splitted.length-1; k++) {
-                var splitted2 = splitted[k].split(/[\s,\+\-\*\\\=!]+/)
+                var splitted2 = splitted[k].split(/[\s,\+\-\*\\\=!<>]+/)
                 var otherName = splitted2[splitted2.length-1]
                 if (['function', 'if', ''].includes(otherName)) continue
                 if (APIendpoints[otherName]) {
