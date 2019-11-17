@@ -49,11 +49,11 @@ update = function() {
     //startSpecialJuanjoBait()
     //startSpecialForwMines()
     //startSpecialBackwmines()
-    startSpecialAttackForwardEvenIfNoVisibility(0)
+    //startSpecialAttackForwardEvenIfNoVisibility(0)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
-    //startSpecialRon3()
-    //if (turn < 150) hitAndRun()
+    startSpecialRon2()
+    if (turn < 150) hitAndRun()
 
     normalActions()
 }
@@ -536,10 +536,14 @@ fightEnemyNearRepairStation = function() {
 startSpecialRon2 = function() {
     if (mode) return
     if (turn <= 2) {
-        if (canReflect()) reflect()
         if (canZap()) zap()
+        if (canReflect()) reflect()
     }
-    if (turn <= 10) {
+    if (turn <= 5) {
+        meleeAnythingButDontCharge()
+        w()
+    }
+    if (turn <= 8) {
         meleeAnythingButDontCharge()
         mode = MODE_RETREAT_REPAIR
         t(x-5, y)
