@@ -958,7 +958,7 @@ maybeFinishOff = function(target) {
 }
 
 maybeZap = function(target) {
-    if (zapAllowed() && canZap() && life > 1100) {
+    if (zapAllowed() && canZap()) {
         if (distanceTo(target) <= 3) {
             zap();
         }
