@@ -52,8 +52,8 @@ update = function() {
     //startSpecialAttackForwardEvenIfNoVisibility(0)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
-    startSpecialRon2()
-    if (turn < 150) hitAndRun()
+    startSpecialRon3()
+    //if (turn < 150) hitAndRun()
 
     normalActions()
 }
@@ -550,14 +550,19 @@ startSpecialRon2 = function() {
 }
 
 startSpecialRon3 = function() {
-    if (turn <= 2) w()
-    if (turn == 3) {
-        if (currDistToClosestBot <= 5 && canReflect()) reflect()
-        m(x+1, y)
-    }
+    // Typical flow:
+    // Turn 1 wait
+    // Turn 2 wait
+    // Turn 3 move(x+1, y)
+    // Turn 4 reflect
+    // Turn 5 zap
+    // Turn 6 teleport (enemy zap has just ended or will end in 1 turn)
     if (turn <= 6) {
+        if (canReflect() && currDistToClosestBot <= 5) reflect() // reflect as soon as we in danger
+        if (turn <= 2) w()
+        if (turn == 3) m(x+1, y)
         if (x == startX) m(x+1, y)
-        if (canReflect()) reflect()
+        if (canReflect()) reflect() // even if we dont have nearby bot we want to reflect before teleporting in.
         if (canZap()) zap()
         t(x+5, y)
         probablyTeleportToBestOffensiveTeleportLocation()
