@@ -17,7 +17,7 @@ init = function() {
     MODE_NORMAL = 3
 
     // backwmine related
-    BACKW_MINES_STALL = true
+    BACKW_MINES_STALL = false
 
     // hitnrun related
     MODE_FIND_TARGET = 1
@@ -657,21 +657,27 @@ startSpecialJuanjoBait = function() {
     }
 }
 
+// Taking out front line melee units
 startSpecialZaharid = function() {
     if (turn == 1) w()
     if (turn <= 3) m(x-1, y)
-    if (turn <= 8) {
+    if (turn == 4) {
+        if (canReflect() && exists(getEntityAt(x+5, y))) reflect()
+        w()
+    }
+    if (turn <= 10) {
         if (canReflect()) reflect()
         if (canZap() && currDistToClosestBot <= 2) zap()
         meleeAnythingButDontCharge()
     }
     if (turn <= 7) w()
-    if (turn <= 9) {
+    if (turn <= 11) {
         t(x-5, y)
         t(x-4, y-1)
         t(x-4, y+1)
     }
     if (turn <= 14) {
+        m(x, y+1)
         m(x-1, y)
         w()
     }
