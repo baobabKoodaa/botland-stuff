@@ -21,8 +21,16 @@ initializeHeatmap = function() {
 
 findTileIndexFromHeatmap = function(cx, cy) {
 
-    // TODO optimize order of lookups by iterating from current pointer backwards (remember reverse overflow)
-    for (i=1; i<=70; i+=4) {
+    // Look up all tiles in heatmap, starting from the most recent update.
+    // First loop goes from recent to 0, second loop goes from 70 to recent.
+    for (i=array2[0]-1; i>=1; i-=4) {
+        hx = array2[i+1];
+        hy = array2[i+2];
+        if (hx == cx && hy == cy) {
+            return i;
+        }
+    }
+    for (i=70; i>=array2[0]; i-=4) {
         hx = array2[i+1];
         hy = array2[i+2];
         if (hx == cx && hy == cy) {
@@ -51,11 +59,8 @@ updateHeatmapLocation = function(cx, cy, heatAmount) {
         array2[tileIndex+3] = null
     }
 
-    // Add tile to next free slot (with overflow to rewrite old slots when we run out of space).
-    if (array2[0] > 70) {
-        array2[0] = 1;
-    }
-    j = array2[0];
+    // Add tile to next free slot
+    j = array2[0]
 
     // For debugging: warn if we are overwriting fresh heat.
     if (turn <= array2[j]) {
@@ -63,20 +68,24 @@ updateHeatmapLocation = function(cx, cy, heatAmount) {
     }
 
     // Add tile
-    array2[j] = turn + HEAT_LONGEVITY;
-    array2[j+1] = cx;
-    array2[j+2] = cy;
-    array2[j+3] = heatAmount;
+    array2[j] = turn + HEAT_LONGEVITY
+    array2[j+1] = cx
+    array2[j+2] = cy
+    array2[j+3] = heatAmount
 
     // Update next free slot pointer.
-    array2[0] = j+4;
+    array2[0] = j+4
+    if (array2[0] > 70) {
+        // Overflow to rewrite old slots when we run out of space.
+        array2[0] = 1
+    }
 }
 
 getLocationHeat = function(cx, cy) {
     array2 = sharedB
     tileIndex = findTileIndexFromHeatmap(cx, cy);
-    if (tileIndex < 1) return 0; // tile not found in heatmap
-    if (array2[tileIndex] < turn) return 0; // tile found but heat expired some turns ago
+    if (tileIndex < 1) return 0 // tile not found in heatmap
+    if (array2[tileIndex] < turn) return 0 // tile found but heat expired some turns ago
     return array2[tileIndex+3]
 }
 
