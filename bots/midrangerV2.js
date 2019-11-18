@@ -13,7 +13,6 @@ init = function() {
     FIRING_DISTANCE = 4
 
 
-
     DODGE_COOLDOWN = 3;
     DODGE_PENALTY_DIST_7 = 3
     DODGE_PENALTY_DIST_6 = 3
@@ -27,6 +26,7 @@ init = function() {
     DODGE_PENALTY_DIST_3_CARDINALITY_EXTRA = 2
     DODGE_PENALTY_DIST_2_CARDINALITY_EXTRA = 4 // melee charge cardinality in addition to laser!
     DODGE_PENALTY_EDGE_OF_MAP = 1
+    dodgeMemoization = -1
 
     MODE_RETREAT_REPAIR = 0
     MODE_ATTACK = 1
@@ -423,6 +423,13 @@ tryOffensiveTeleport = function() {
 }
 
 maybeDodge = function() {
+
+    // This function may be called multiple times during the same update.
+    // If the first call doesn't lead to dodging, subsequent calls will neither.
+    // This memoization will prevent us from unnecessarily doing heavy computations.
+    if (dodgeMemoization == turn) return
+    dodgeMemoization = turn
+
     if (turn >= lastMoveTurn + DODGE_COOLDOWN) {
         // Cooldown so we don't waste all our turns evading. For example, cooldown 3 prevents normal-haste artillery from ever landing a hit on us.
         // This is more crucial to midranger compared to outranger, because midranger will end up in missile vs missile/laser fights, whereas outranger can actually outrange opponents.
