@@ -10,24 +10,28 @@ init = function() {
     ALTERNATE_REFLECT_CLOAK = 1
     SENSORS_ALLOWED_FROM_TURN = 999
 
-    // forwmine related
+    // forwmine related configs
     LURE_UP = false
+
+    // backwmine related configs
+    BACKW_MINES_STALL = true
+
+    // hitnrun related configs
+    REPAIR_X = 1
+    REPAIR_Y = 1
+
+    // forwmine related literals (not configs)
     MODE_MINES_FORWARD = 1
     MODE_LURE_THEM_IN = 2
     MODE_NORMAL = 3
 
-    // backwmine related
-    BACKW_MINES_STALL = true
-
-    // hitnrun related
+    // hitnrun related literals (not configs)
     MODE_FIND_TARGET = 1
     MODE_GANK = 2
     MODE_RETREAT_REPAIR = 3
     REPAIR_AVAILABLE = 1
-    REPAIR_X = 1
-    REPAIR_Y = 1
 
-    commonInitProcedures();
+    commonInitProcedures()
 
     // sharedA reserved for [HITANDRUN] when an enemy was last seen near repair station
     // sharedB reserved for general purpose shared array
@@ -44,18 +48,17 @@ update = function() {
 
     commonStateUpdates()
 
-    startSpecialCrayIton()
-    //startSpecialRonBait()
+    //startSpecialCrayIton()
     //startSpecialDarklingArcher3()
     //startSpecialJuanjoBait()
     //startSpecialZaharid()
     //startSpecialForwMines()
     //startSpecialBackwmines()
-    //startSpecialAttackForwardEvenIfNoVisibility(1)
+    //startSpecialAttackForwardEvenIfNoVisibility(1, false)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
-    //startSpecialRon3()
-    //if (turn < 150) hitAndRun()
+    startSpecialRon2()
+    if (turn < 150) hitAndRun()
 
     normalActions()
 }
@@ -552,12 +555,13 @@ startSpecialRon2 = function() {
         if (canZap()) zap()
         if (canReflect()) reflect()
     }
-    if (turn <= 4) {
+    if (turn <= 5) {
         meleeAnythingButDontCharge()
         w()
     }
-    if (turn <= 8) {
+    if (turn <= 6) {
         meleeAnythingButDontCharge()
+        tryMelee(x+2, y)
         mode = MODE_RETREAT_REPAIR
         t(x-5, y)
         t(x-4, y-1)
@@ -587,8 +591,10 @@ startSpecialRon3 = function() {
 }
 
 
-startSpecialAttackForwardEvenIfNoVisibility = function(movesToRight) {
+startSpecialAttackForwardEvenIfNoVisibility = function(movesToRight, reflectImmediately) {
+    if (turn == 1 && reflectImmediately) reflect()
     if (!movesToRight) movesToRight = 0
+    if (reflectImmediately) movesToRight += 1
     if (turn <= movesToRight) m(x+1, y)
     if (turn <= 4 + movesToRight) {
         if (canReflect()) reflect()
@@ -596,6 +602,7 @@ startSpecialAttackForwardEvenIfNoVisibility = function(movesToRight) {
         t(x+5, y)
         probablyTeleportToBestOffensiveTeleportLocation()
     }
+    if (turn <= 6 + movesToRight) normalActions()
 }
 
 startSpecialAttackVerticallyCenterEvenIfNoVisibility = function() {
@@ -892,10 +899,10 @@ tryDefensiveTeleport = function() {
 
 fight = function() {
     maybeFinishOff(target)
-    if (reflectAllowed()) reflect()
-    if (ALTERNATE_REFLECT_CLOAK && !isReflecting() && canCloak()) cloak()
-    maybeZap(target)
-    maybeTeleportIntoEnemies(target)
+    if (reflectAllowed() && !isCloaked()) reflect()
+    if (canCloak() && ALTERNATE_REFLECT_CLOAK && !isReflecting() && !isZapping()) cloak()
+    if (!isCloaked()) maybeZap(target)
+    if (!isCloaked()) maybeTeleportIntoEnemies(target)
 
     if (willMeleeHit(target)) {
         melee(target)
