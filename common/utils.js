@@ -71,6 +71,11 @@ m = function(cx, cy) {
     }
 }
 
+tryShield = function(cx, cy) {
+    shieldTarget = getEntityAt(cx, cy)
+    if (exists(shieldTarget) && canShield(shieldTarget)) shield(shieldTarget)
+}
+
 tryToRepairSomeoneWithoutMoving = function() {
     if (willRepair()) {
         if (life < 1900) repair()
