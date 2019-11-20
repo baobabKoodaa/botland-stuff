@@ -41,7 +41,9 @@ init = function() {
     // sharedD reserved for
     //          [FORWMINES] end-of-w-lure
     //          [HITANDRUN] turn when an ally last needed repair
+    //          [ZAHARIDSP] sign that wait-and-repair must end
     // sharedE reserved for [HITANDRUN] shared target (x*100+y)
+
 };
 
 update = function() {
@@ -58,7 +60,6 @@ update = function() {
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
 
     startSpecialRon2()
-    if (turn < 150) hitAndRun()
 
     normalActions()
 }
@@ -320,8 +321,8 @@ hitAndRunRetreat = function() {
 determineSafetyThreshold = function() {
     safetyThreshold = 300
     if (someoneNeedsRepair()) safetyThreshold += 200
-    if (isZapping()) safetyThreshold -= 200
-    if (isReflecting()) safetyThreshold -= 100
+    if (isZapping()) safetyThreshold -= 300
+    if (isReflecting()) safetyThreshold -= 200
     // Our safety threshold should be lower when our shared target is about to die (take risks to finish off enemies before they can repair).
     // (We don't want to refresh shared target now so we'll look at life of the lowest-health enemy in range instead of life of shared target).
     lowestLifeEnemy = findEntity(ENEMY, BOT, SORT_BY_LIFE, SORT_ASCENDING)
@@ -550,7 +551,9 @@ startSpecialCrayIton = function() {
 }
 
 startSpecialRon2 = function() {
-    if (mode) return
+    if (mode) {
+        wallFlowerRepair()
+    }
     if (turn <= 2) {
         if (canZap()) zap()
         if (canReflect()) reflect()
@@ -579,7 +582,7 @@ startSpecialRon3 = function() {
     // Turn 5 zap
     // Turn 6 teleport (enemy zap has just ended or will end in 1 turn)
     if (turn <= 6) {
-        if (canReflect() && currDistToClosestBot <= 5) reflect() // reflect as soon as we in danger
+        //if (canReflect() && currDistToClosestBot <= 5 && x >= 10) reflect() // reflect as soon as we in danger
         if (turn <= 2) w()
         if (turn == 3) m(x+1, y)
         if (x == startX) m(x+1, y)
@@ -682,28 +685,54 @@ startSpecialJuanjoBait = function() {
 
 // Taking out front line melee units
 startSpecialZaharid = function() {
-    if (turn == 1) w()
+    if (turn == 1) idleJobs()
     if (turn <= 3) m(x-1, y)
     if (turn == 4) {
         if (canReflect() && exists(getEntityAt(x+5, y))) reflect()
-        w()
+        if (canLayMine()) layMine()
+        idleJobs()
     }
     if (turn <= 10) {
         if (canReflect()) reflect()
         if (canZap() && currDistToClosestBot <= 2) zap()
+        if (shouldWeRetreat()) t(x-5, y)
         meleeAnythingButDontCharge()
     }
-    if (turn <= 7) w()
+    if (turn <= 7) idleJobs()
     if (turn <= 11) {
         t(x-5, y)
         t(x-4, y-1)
         t(x-4, y+1)
     }
-    if (turn <= 14) {
-        m(x, y+1)
-        m(x-1, y)
-        w()
+    wallFlowerRepair()
+}
+
+startSpecialZaharid2 = function() {
+    if (turn == 1) idleJobs()
+    if (turn == 2) reflect()
+    if (turn == 3) m(x+1, y)
+    if (turn == 4) zap()
+    if (turn == 5) probablyTeleportToBestOffensiveTeleportLocation()
+}
+
+wallFlowerRepair = function() {
+    if (turn <= 40) {
+        if (x == 0 && (currDistToClosestBot <= 5 || dmgTaken > 100)) {
+            sharedD = true
+        }
+        if (!sharedD) {
+            m(x-1, y)
+            if (!exists(getEntityAt(x+1, y+1))) m(x, y+1)
+            tryToRepairSomeoneWithoutMoving()
+            idleJobs()
+        }
     }
+}
+
+idleJobs = function() {
+    if (canLayMine()) layMine()
+    tryToRepairSomeoneWithoutMoving()
+    w()
 }
 
 startSpecialDarklingArcher = function() {
