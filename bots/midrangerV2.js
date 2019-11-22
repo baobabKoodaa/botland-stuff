@@ -43,8 +43,7 @@ init = function() {
 
 update = function () {
     commonStateUpdates()
-
-    updateHeatmap()
+    if (DODGE_ARTILLERY) updateHeatmap()
 
     //debugLog("turn", turn, "id", id, "life", life, "x", x, "y", y, "hot?", isLocationHot(x, y))
 
