@@ -20,12 +20,15 @@ init = function() {
     REPAIR_X = 1
     REPAIR_Y = 1
 
-    // forwmine related literals (not configs)
+    // NOT CONFIGS (forwmine related)
     MODE_MINES_FORWARD = 1
     MODE_LURE_THEM_IN = 2
     MODE_NORMAL = 3
 
-    // hitnrun related literals (not configs)
+    // NOT CONFIGS (backwmine related)
+    lastStallTurn = -666
+
+    // NOT CONFIGS (hitnrun related)
     MODE_FIND_TARGET = 1
     MODE_GANK = 2
     MODE_RETREAT_REPAIR = 3
@@ -52,14 +55,18 @@ update = function() {
 
     //startSpecialCrayIton()
     //startSpecialDarklingArcher3()
+    //startSpecialDarklingArcher5()
     //startSpecialJuanjoBait()
-    //startSpecialZaharid()
-    //startSpecialForwMines()
-    //startSpecialBackwmines()
-    //startSpecialAttackForwardEvenIfNoVisibility(1, false)
-    //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
+    //startSpecialZaharid2()
+    //startSpecialRon3()
+    //startSpecialHavocbot2()
 
-    startSpecialRon2()
+    //startSpecialForwMines()
+    startSpecialBackwmines()
+    //startSpecialAttackForwardEvenIfNoVisibility(1, false, false)
+    //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
+    //startSpecialWalkForward()
+
 
     normalActions()
 }
@@ -539,6 +546,48 @@ fightEnemyNearRepairStation = function() {
 
 /*************************************************** Various start specials **********************************************************/
 
+startSpecialWalkForward = function() {
+    if (turn <= 6) {
+        closestNmyBot = findClosestEnemyBot()
+        if (exists(closestNmyBot) && willMeleeHit(closestNmyBot)) melee()
+        if (canReflect() && currDistToClosestBot <= 4) reflect()
+        if (canZap() && currDistToClosestBot <= 3) zap()
+        m(x+1, y)
+    }
+}
+
+startSpecialHavocbot = function() {
+    // Ei yleensä oteta reflectoria mukaan, mutta
+    if (turn <= 4 && canReflect() && currDistToClosestBot <= 5) reflect()
+
+    if (turn <= 4) {
+        if (canLayMine()) layMine()
+        m(x-1, y)
+    }
+    if (turn == 5) m(x-1, y)
+    if (turn == 6) zap()
+    if (turn == 7 && willMeleeHit()) melee()
+}
+
+startSpecialHavocbot2 = function() {
+    if (turn <= 2) {
+        if (canReflect()) reflect()
+        m(x+1, y)
+    }
+    if (turn == 3 && canZap()) zap()
+    if (turn == 5) {
+        t(x+5, y)
+        t(x+4, y+1)
+        t(x+4, y-1)
+        t(x+4, y)
+        probablyTeleportToBestOffensiveTeleportLocation()
+    }
+    if (canEmp()) {
+        if (turn == 6 && y <= yCPU) emp('MISSILES')
+        if (turn >= 8) emp('MISSILES')
+    }
+}
+
 startSpecialCrayIton = function() {
     if (turn == 1) cloak()
     if (turn <= 3) m(x+1, y)
@@ -562,7 +611,7 @@ startSpecialRon2 = function() {
         meleeAnythingButDontCharge()
         w()
     }
-    if (turn <= 6) {
+    if (turn <= 7) {
         meleeAnythingButDontCharge()
         tryMelee(x+2, y)
         mode = MODE_RETREAT_REPAIR
@@ -594,11 +643,19 @@ startSpecialRon3 = function() {
 }
 
 
-startSpecialAttackForwardEvenIfNoVisibility = function(movesToRight, reflectImmediately) {
-    if (turn == 1 && reflectImmediately) reflect()
+startSpecialAttackForwardEvenIfNoVisibility = function(movesToRight, reflectImmediately, mixingReflectorsAndNonReflectors) {
+    if (turn == 1 && reflectImmediately && canReflect()) reflect()
     if (!movesToRight) movesToRight = 0
     if (reflectImmediately) movesToRight += 1
     if (turn <= movesToRight) m(x+1, y)
+
+    if (mixingReflectorsAndNonReflectors) {
+        // When we have both units in play, the non reflectors need to wait once so that teleport is synchronized.
+        if (turn == 1 + movesToRight) {
+            if (!canReflect() && !isReflecting()) w()
+        }
+    }
+
     if (turn <= 4 + movesToRight) {
         if (canReflect()) reflect()
         if (canZap()) zap()
@@ -641,7 +698,14 @@ startSpecialBackwmines = function() {
             return
         }
         if (canLayMine() && currDistToClosestBot >= 3) layMine()
-        if (BACKW_MINES_STALL && currDistToClosestBot >= 5) w() // maintain visibility to lure the enemy in
+        if (BACKW_MINES_STALL && currDistToClosestBot >= 5) {
+            // maintain visibility to lure the enemy in
+            if (lastStallTurn < turn-1) {
+                // prevent being killed by artillery if enemy really isnt coming
+                lastStallTurn = turn
+                w()
+            }
+        }
         m(x-1, y)
         w()
     }
@@ -658,10 +722,6 @@ haveAlliesSignalledNormalMode = function() {
 
 signalAlliesNormalMode = function() {
     sharedD = true
-}
-
-eat = function(cx, cy) {
-    return (exists(getEntityAt(cx, cy)))
 }
 
 startSpecialJuanjoBait = function() {
@@ -799,6 +859,19 @@ startSpecialDarklingArcher4 = function() {
     if (turn <= 2) {
         if (canZap()) zap()
         if (canReflect()) reflect()
+    }
+}
+
+startSpecialDarklingArcher5 = function() {
+    if (turn == 1) {
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+    }
+    if (turn == 2) {
+        if (eat(x, y+1) && !eat(x-1, y+1)) m(x-1, y)
+    }
+    if (turn <= 3) {
+        if (canZap()) zap()
     }
 }
 
