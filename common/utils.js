@@ -71,9 +71,36 @@ m = function(cx, cy) {
     }
 }
 
+eat = function(cx, cy) {
+    return (exists(getEntityAt(cx, cy)))
+}
+
 tryShield = function(cx, cy) {
     shieldTarget = getEntityAt(cx, cy)
     if (exists(shieldTarget) && canShield(shieldTarget)) shield(shieldTarget)
+}
+
+getRightMostFriendly = function() {
+    rightMost = self
+    array1 = findEntities(IS_OWNED_BY_ME, BOT, false)
+    for (i = 0; i < size(array1); i++) {
+        if (getX(array1[i]) > getX(rightMost)) {
+            rightMost = array1[i]
+        }
+    }
+    return rightMost
+}
+
+// Reminder: do not merge these functions together; we need the canShield check separately for each unit.
+tryShieldRightMostFriendly = function() {
+    rightMost = self
+    array1 = findEntities(IS_OWNED_BY_ME, BOT, false)
+    for (i = 0; i < size(array1); i++) {
+        if (getX(array1[i]) > getX(rightMost) && canShield(array1[i])) {
+            rightMost = array1[i]
+        }
+    }
+    if (canShield(rightMost)) shield(rightMost)
 }
 
 tryToRepairSomeoneWithoutMoving = function() {
