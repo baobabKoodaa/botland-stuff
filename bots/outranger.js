@@ -54,6 +54,7 @@ normalActions = function() {
             probablyDodge()
         }
     }
+    if (currDistToClosestBot == 1 && canCloak()) cloak()
     if (reflectAllowed() && currDistToClosestBot <= 5) {
         reflect()
     }
