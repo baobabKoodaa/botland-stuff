@@ -8,8 +8,8 @@ init = function() {
 update = function() {
     commonStateUpdates()
 
-    darklingSpecial()
-
+    startSpecialCloakTeleEmp('ZAPPER')
+    //darklingSpecial()
     //baitSpecial()
 
     if (canShield()) {
@@ -18,8 +18,11 @@ update = function() {
         shield()
     }
     if (canReflect() && dmgTaken > 100 && currDistToClosestBot > 1) reflect()
+    if (canCloak() && dmgTaken > 100) cloak()
     if (willMissilesHit()) fireMissiles()
     m(x+1, y)
+
+    n()
 }
 
 baitSpecial = function() {
@@ -50,5 +53,21 @@ darklingSpecial = function() {
     }
     if (turn == 6) {
         if (canEmp()) emp('MELEE')
+    }
+}
+
+startSpecialCloakTeleEmp = function(empTarget) {
+    if (turn == 1) cloak()
+    if (turn == 2) m(x+1, y)
+    if (turn == 3) {
+        t(x+5, y)
+        t(x+4, y)
+        t(x+4, y-1)
+        t(x+4, y+1)
+        t(x+3, y)
+    }
+    if (canEmp()) {
+        if (turn == 4 && y <= 5) emp(empTarget)
+        if (turn >= 6) emp(empTarget)
     }
 }
