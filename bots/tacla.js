@@ -8,7 +8,7 @@ init = function() {
     ON_DMG_REFLECT = 1
     DODGE_ARTILLERY = 0 // simple dodge, not heatmap
     REPAIR_AVAILABLE = 1
-    ALLOW_MOVE_TURN = 1
+    ALLOW_MOVE_TURN = 9
 
 
     // Roles
@@ -84,13 +84,32 @@ maybeUpdateGoal = function() {
         ex = getX(nmy)
         ey = getY(nmy)
         setGoal(getX(nmy), getY(nmy))
-    } else if (!REPAIR_AVAILABLE || life >= 1900 || role == ROLE_BACK_ROW) { // this is hacky, but role==back row in this case is a check if repairman is dead
-        if (x < xCPU-1) setGoal(xCPU-1, y)
-        else setGoal(x, yCPU)
-    } else {
-        // We have a need to repair and we think repairing is possible. TODO: prevent being jammed here
+    } else if (REPAIR_AVAILABLE && turn < 100 && (role == ROLE_STUNNA || role == ROLE_REPAIR) && getLifeOfLowestLifeFriendlyInRadius(x, y, 1) < 1900) {
+        // Role checking is used as a hacky proxy for whether we believe repairing will be possible.
+        // Turn checking is to prevent jamming to a single location in unexpected circumstances.
         setGoal(x, y)
+    } else {
+        // We want to move forward.
+        if (x < xCPU-2) setGoal(xCPU-2, y)
+        else setGoal(x, yCPU)
     }
+}
+
+getLifeOfLowestLifeFriendlyInRadius = function(cx, cy, radius) {
+    soFarLowestLife = life
+    array1 = findEntities(IS_OWNED_BY_ME, BOT, true)
+    for (i=0; i<size(array1); i++) {
+        fnx = getX(array1[i])
+        fny = getY(array1[i])
+        distToFriendly = d(cx, cy, fnx, fny)
+        if (distToFriendly <= radius) {
+            fnLife = getLife(array1[i])
+            if (fnLife < soFarLowestLife) {
+                soFarLowestLife = fnLife
+            }
+        }
+    }
+    return soFarLowestLife
 }
 
 setGoal = function(cx, cy) {
