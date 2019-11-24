@@ -148,9 +148,20 @@ maybeDodge = function() {
 }
 
 maybeFire = function() {
-    //TODO targeting (prefer an enemy bot on our right, then enemy bot anywhere else, then chips/cpus)
-    if (willLasersHit()) { // TODO willLasersHitAnyBot (not chip)
+    if (willLasersHit()) {
         lastLaserTurn = turn
+        // Prefer to fire at bots on our row
+        tryLasers(x+1, y)
+        tryLasers(x+2, y)
+        tryLasers(x+3, y)
+        tryLasers(x+4, y)
+        tryLasers(x+5, y)
+        tryLasers(x-1, y)
+        tryLasers(x-2, y)
+        tryLasers(x-3, y)
+        tryLasers(x-4, y)
+        tryLasers(x-5, y)
+        // Secondarily prefer to fire at bots, then prefer to fire at chips/cpus
         fireLasers()
     }
     if (willArtilleryHit()) {
@@ -159,6 +170,11 @@ maybeFire = function() {
         tryArtillery(x+7, y)
         //fireArtillery() // This is commented out because the strength of this strategy relies on moving as a row, firing lasers as a row, and we don't want to stay behind shooting arty. We only need arty for our back row in laser vs laser battles.
     }
+}
+
+tryLasers = function(cx, cy) {
+    laserTarget = getEntityAt(cx, cy)
+    if (exists(laserTarget) && willLasersHit(laserTarget)) fireLasers(laserTarget)
 }
 
 tryArtillery = function(cx, cy) {
