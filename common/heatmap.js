@@ -63,9 +63,9 @@ updateHeatmapLocation = function(cx, cy, heatAmount) {
     j = array2[0]
 
     // For debugging: warn if we are overwriting fresh heat.
-    if (turn <= array2[j]) {
-        debugLog("turn", turn, "overwriting fresh heat")
-    }
+    //if (turn <= array2[j]) {
+    //    debugLog("turn", turn, "overwriting fresh heat")
+    //}
 
     // Add tile
     array2[j] = turn + HEAT_LONGEVITY
