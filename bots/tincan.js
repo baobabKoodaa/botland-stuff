@@ -58,12 +58,15 @@ update = function() {
     //startSpecialDarklingArcher5()
     //startSpecialJuanjoBait()
     //startSpecialZaharid2()
-    //startSpecialRon3()
+    //startSpecialRon2()
+    //startSpecialRon3() // old burn-zapper-cooldown-thingie
+    //startSpecialRon4() // empspecial
+    //startSpecialHavocbot()
     //startSpecialHavocbot2()
 
     //startSpecialForwMines()
-    startSpecialBackwmines()
-    //startSpecialAttackForwardEvenIfNoVisibility(1, false, false)
+    //startSpecialBackwmines()
+    startSpecialAttackForwardEvenIfNoVisibility(1, false, false)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
     //startSpecialWalkForward()
 
@@ -559,7 +562,6 @@ startSpecialWalkForward = function() {
 startSpecialHavocbot = function() {
     // Ei yleensä oteta reflectoria mukaan, mutta
     if (turn <= 4 && canReflect() && currDistToClosestBot <= 5) reflect()
-
     if (turn <= 4) {
         if (canLayMine()) layMine()
         m(x-1, y)
@@ -604,8 +606,8 @@ startSpecialRon2 = function() {
         wallFlowerRepair()
     }
     if (turn <= 2) {
-        if (canZap()) zap()
         if (canReflect()) reflect()
+        if (canZap()) zap()
     }
     if (turn <= 5) {
         meleeAnythingButDontCharge()
@@ -638,6 +640,24 @@ startSpecialRon3 = function() {
         if (canReflect()) reflect() // even if we dont have nearby bot we want to reflect before teleporting in.
         if (canZap()) zap()
         t(x+5, y)
+        probablyTeleportToBestOffensiveTeleportLocation()
+    }
+}
+
+startSpecialRon4 = function() {
+    if (turn == 1) {
+        if (canReflect()) reflect()
+        w()
+    }
+    if (turn == 2) {
+        m(x+1, y)
+    }
+    if (turn == 3) zap()
+    if (turn == 4) {
+        t(x+5, y)
+        t(x+4, y)
+        t(x+4, y-1)
+        t(x+4, y+1)
         probablyTeleportToBestOffensiveTeleportLocation()
     }
 }
@@ -731,7 +751,9 @@ startSpecialJuanjoBait = function() {
         if (canZap() && currDistToClosestBot <= 2) zap()
         meleeAnythingButDontCharge()
     }
-    if (turn <= 7) w()
+    if (turn <= 8) {
+        w()
+    }
     if (turn <= 9) {
         t(x-5, y)
         t(x-4, y-1)
@@ -868,10 +890,23 @@ startSpecialDarklingArcher5 = function() {
         if (canZap()) zap()
     }
     if (turn == 2) {
-        if (eat(x, y+1) && !eat(x-1, y+1)) m(x-1, y)
+        if (y < yCPU) {
+            if (eat(x, y+1) && !eat(x-1, y+1)) m(x-1, y)
+        } else {
+            if (eat(x, y-1) && !eat(x-1, y-1)) m(x-1, y)
+        }
     }
     if (turn <= 3) {
         if (canZap()) zap()
+    }
+    if (turn <= 5) {
+        if (eat(x-1, y) || eat(x+1, y)) {
+            if (y < yCPU) {
+                if (!eat(x, y+1) && !eat(x-1, y+1) && !eat(x+1, y+1)) m(x, y+1)
+            } else {
+                if (!eat(x, y-1) && !eat(x-1, y-1) && !eat(x+1, y-1)) m(x, y-1)
+            }
+        }
     }
 }
 
