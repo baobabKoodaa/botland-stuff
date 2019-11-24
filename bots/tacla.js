@@ -6,7 +6,9 @@ init = function() {
 
     ROW_FIRST_REFLECT_ON_ENEMY_SIGHT = 1
     ON_DMG_REFLECT = 1
-    DODGE_ARTILLERY = 1 // simple dodge, not heatmap
+    DODGE_ARTILLERY = 0 // simple dodge, not heatmap
+    REPAIR_AVAILABLE = 1
+    ALLOW_MOVE_TURN = 1
 
 
     // Roles
@@ -37,12 +39,22 @@ update = function() {
     maybeDodge()
     tryShieldRightMostFriendly()
     maybeReflect()
-    maybeLasers()
+    maybeFire()
     maybeMoveTowardsGoal()
     maybeRepair()
 
     if (canActivateSensors()) activateSensors()
-    w()
+
+    idleJobs()
+}
+
+idleJobs = function() {
+    if (willLasersHit()) fireLasers()
+    if (willArtilleryHit()) fireArtillery()
+
+    // Cloaked enemies may be there. Why not.
+    if (randInt(0, 2) == 0) fireLasers('up')
+    else fireLasers('down')
 }
 
 rowFirstUpdates = function() {
@@ -61,12 +73,18 @@ getRowY = function() {
 }
 
 maybeUpdateGoal = function() {
-    if (turn == 1) {
+    if (turn == 1 || turn < ALLOW_MOVE_TURN) {
         setGoal(startX, startY)
     } else if (currDistToClosestBot <= 7) {
         nmy = findClosestEnemyBot()
+        // Prefer enemies within row's firing range rather than enemies which are closer but not on firing range.
+        if (eat(x+1, y)) nmy = getEntityAt(x+1, y)
+        if (eat(x+2, y)) nmy = getEntityAt(x+2, y)
+        if (eat(x+3, y)) nmy = getEntityAt(x+3, y)
+        ex = getX(nmy)
+        ey = getY(nmy)
         setGoal(getX(nmy), getY(nmy))
-    } else if (life >= 1900 || role == ROLE_BACK_ROW) { // this is hacky, but role==back row in this case is a check if repairman is dead
+    } else if (!REPAIR_AVAILABLE || life >= 1900 || role == ROLE_BACK_ROW) { // this is hacky, but role==back row in this case is a check if repairman is dead
         if (x < xCPU-1) setGoal(xCPU-1, y)
         else setGoal(x, yCPU)
     } else {
@@ -129,12 +147,23 @@ maybeDodge = function() {
     }
 }
 
-maybeLasers = function() {
+maybeFire = function() {
     //TODO targeting (prefer an enemy bot on our right, then enemy bot anywhere else, then chips/cpus)
     if (willLasersHit()) { // TODO willLasersHitAnyBot (not chip)
         lastLaserTurn = turn
         fireLasers()
     }
+    if (willArtilleryHit()) {
+        tryArtillery(x+5, y)
+        tryArtillery(x+6, y)
+        tryArtillery(x+7, y)
+        //fireArtillery() // This is commented out because the strength of this strategy relies on moving as a row, firing lasers as a row, and we don't want to stay behind shooting arty. We only need arty for our back row in laser vs laser battles.
+    }
+}
+
+tryArtillery = function(cx, cy) {
+    artyTarget = getEntityAt(cx, cy)
+    if (exists(artyTarget) && willArtilleryHit(artyTarget)) fireArtillery(artyTarget)
 }
 
 maybeMoveTowardsGoal = function() {
