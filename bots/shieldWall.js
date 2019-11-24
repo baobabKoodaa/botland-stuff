@@ -19,7 +19,9 @@ update = function() {
         mineLureRetreat()
     }
     if (isReflecting()) {
-        if (currDistToClosestBot >= 5) m(x+1, y)
+        if (currDistToClosestBot > 5) m(x+1, y)
+        // TODO hakeudu cardinalityyn kun reflektataan
+        if (currDistToClosestBot == 5) idleJobs()
         if (currDistToClosestBot == 4) idleJobs()
         if (currDistToClosestBot <= 3) {
             if (canLayMine()) layMine()
@@ -29,8 +31,12 @@ update = function() {
     }
     if (!isReflecting()) {
         if (!canReflect()) {
+            if (currDistToClosestBot == 5) {
+                if (distToClosestEnemyBot(x-1, y) > 5) m(x-1, y)
+            }
             if (currDistToClosestBot <= 5) {
                 tryDefensiveTeleport()
+                // TODO hakeudu pois cardinalitystä kun ei reflektata
                 mineLureRetreat()
             }
             idleJobs()
@@ -97,6 +103,25 @@ tryDefensiveTeleport = function() {
     t(x+4, y-1)
     t(x, y+5)
     t(x, y-5)
+}
+
+
+// TODO teleport-kohteiden pisteytys tän tyyppisesti?
+isSafe = function(cx, cy) {
+    return countEnemyBotsWithMeleeCardinality(cx, cy) == 0 && countEnemyBotsWithinDist(cx, cy, 1, 3) <= 1
+}
+
+tryMoveToIfSafe = function(cx, cy) {
+    if (isSafe(cx, cy)) m(cx, cy)
+}
+
+tryTeleportIfSafe = function(cx, cy) {
+    // Micro-optimizations to prevent unnecessary heavy calculations
+    if (outOfBounds(cx, cy)) return
+    if (!getDistanceTo(cx, cy) > 5) return
+    if (eat(cx, cy)) return
+    // The actual tryTeleportIfSafe functionality
+    if (isSafe(cx, cy)) t(cx, cy)
 }
 
 idleJobs = function() {
