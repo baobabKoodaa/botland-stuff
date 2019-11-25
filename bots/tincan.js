@@ -62,11 +62,11 @@ update = function() {
     //startSpecialRon3() // old burn-zapper-cooldown-thingie
     //startSpecialRon4() // empspecial
     //startSpecialHavocbot()
-    //startSpecialHavocbot2()
+    startSpecialHavocbot2()
 
     //startSpecialForwMines()
     //startSpecialBackwmines()
-    startSpecialAttackForwardEvenIfNoVisibility(1, false, false)
+    //startSpecialAttackForwardEvenIfNoVisibility(1, false, false)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
     //startSpecialWalkForward()
 
@@ -584,10 +584,6 @@ startSpecialHavocbot2 = function() {
         t(x+4, y)
         probablyTeleportToBestOffensiveTeleportLocation()
     }
-    if (canEmp()) {
-        if (turn == 6 && y <= yCPU) emp('MISSILES')
-        if (turn >= 8) emp('MISSILES')
-    }
 }
 
 startSpecialCrayIton = function() {
@@ -745,21 +741,25 @@ signalAlliesNormalMode = function() {
 }
 
 startSpecialJuanjoBait = function() {
-    if (turn <= 2) w()
+    if (turn <= 2) {
+        if (canLayMine()) layMine()
+        w()
+    }
     if (turn <= 4) m(x-1, y)
-    if (turn <= 8) {
+    if (turn <= 10) {
         if (canZap() && currDistToClosestBot <= 2) zap()
         meleeAnythingButDontCharge()
     }
-    if (turn <= 8) {
+    if (turn <= 10) {
+        if (canLayMine()) layMine()
         w()
     }
-    if (turn <= 9) {
+    if (turn <= 11) {
         t(x-5, y)
         t(x-4, y-1)
         t(x-4, y+1)
     }
-    if (turn <= 14) {
+    if (turn <= 15) {
         m(x-1, y)
         w()
     }
