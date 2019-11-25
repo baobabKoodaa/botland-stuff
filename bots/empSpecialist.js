@@ -67,7 +67,7 @@ startSpecialCloakTeleEmp = function(empTarget) {
         t(x+3, y)
     }
     if (canEmp()) {
-        if (turn == 4 && y <= 5) emp(empTarget)
+        if (turn == 4 && y <= yCPU) emp(empTarget)
         if (turn >= 6) emp(empTarget)
     }
 }
