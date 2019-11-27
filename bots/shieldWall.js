@@ -16,6 +16,9 @@ update = function() {
         if (isZapping()) tryToBreakMeleeCardinalityByMoving()
         tryDefensiveTeleport()
         if (canZap()) zap()
+        if (!isReflecting() && canCloak()) cloak()
+        tryToBreakMeleeCardinalityByMoving()
+        if (willMeleeHit()) melee()
         mineLureRetreat()
     }
     if (isReflecting()) {
@@ -36,13 +39,14 @@ update = function() {
             }
             if (currDistToClosestBot <= 5) {
                 tryDefensiveTeleport()
+                if (canCloak()) cloak()
                 // TODO hakeudu pois cardinalitystä kun ei reflektata
                 mineLureRetreat()
             }
             idleJobs()
         }
         if (canReflect()) {
-            if (currDistToClosestBot <= 6) reflect()
+            if (currDistToClosestBot <= 6 && !isCloaked()) reflect()
 
             // Advance by laying mines, without waiting for sensors
             if (canLayMine()) layMine()
@@ -128,6 +132,7 @@ idleJobs = function() {
     if (canLayMine()) layMine()
     tryToRepairSomeoneWithoutMoving()
     if (willArtilleryHit()) fireArtillery()
+    if (willMeleeHit()) melee()
     if (canActivateSensors()) activateSensors()
     w()
 }
