@@ -8,7 +8,7 @@ init = function() {
 update = function() {
     commonStateUpdates()
 
-    startSpecialCloakTeleEmp('ZAPPER')
+    startSpecialCloakTeleEmp(1,'ZAPPER')
     //darklingSpecial()
     //baitSpecial()
 
@@ -17,9 +17,15 @@ update = function() {
         if (exists(lowestLifeFriendly) && canShield(lowestLifeFriendly)) shield(lowestLifeFriendly)
         shield()
     }
-    if (canReflect() && dmgTaken > 100 && currDistToClosestBot > 1) reflect()
-    if (canCloak() && dmgTaken > 100) cloak()
+    if (canReflect() && !isCloaked() && dmgTaken > 100 && currDistToClosestBot > 1) reflect()
+    if (canCloak() && !isReflecting() && dmgTaken > 100 && !isZapping()) cloak()
+    if (canZap()) zap()
+    if (willMeleeHit()) melee()
     if (willMissilesHit()) fireMissiles()
+    if (isZapping()) {
+        // TODO properly; maximize zapper damage while minimizing melee contact
+        w()
+    }
     m(x+1, y)
 
     n()
@@ -56,18 +62,18 @@ darklingSpecial = function() {
     }
 }
 
-startSpecialCloakTeleEmp = function(empTarget) {
+startSpecialCloakTeleEmp = function(movesAfterCloak, empTarget) {
     if (turn == 1) cloak()
-    if (turn == 2) m(x+1, y)
-    if (turn == 3) {
+    if (turn <= 1+movesAfterCloak) m(x+1, y)
+    if (turn <= 2+movesAfterCloak) {
         t(x+5, y)
         t(x+4, y)
-        t(x+4, y-1)
         t(x+4, y+1)
+        t(x+4, y-1)
         t(x+3, y)
     }
     if (canEmp()) {
-        if (turn == 4 && y <= yCPU) emp(empTarget)
-        if (turn >= 6) emp(empTarget)
+        if (turn == 3+movesAfterCloak && y <= yCPU) emp(empTarget)
+        if (turn >= 5+movesAfterCloak) emp(empTarget)
     }
 }
