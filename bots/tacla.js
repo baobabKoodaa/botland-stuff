@@ -126,7 +126,7 @@ goalY = function() {
 
 detectRole = function() {
     if (iAmRightMostFriendly()) role = ROLE_STUNNA
-    else if (willRepair()) role = ROLE_REPAIR
+    else if (willRepair() === false || willRepair()) role = ROLE_REPAIR // willRepair() returns true (if our life < 2000) or false (if our life == 2000 and we have the repair hardware). Those are accepted. Null means we dont have the hardware.
     else role = ROLE_BACK_ROW
 }
 
