@@ -56,22 +56,48 @@ update = function() {
     //startSpecialCrayIton()
     //startSpecialDarklingArcher3()
     //startSpecialDarklingArcher5()
+    //startSpecialDarklingArcher6()
+    //startSpecialDarkLingArcher7()
     //startSpecialJuanjoBait()
+    //startSpecialJuanjo2()
     //startSpecialZaharid2()
     //startSpecialRon2()
     //startSpecialRon3() // old burn-zapper-cooldown-thingie
-    //startSpecialRon4() // empspecial
+    //startSpecialEmpSpecial(0)
     //startSpecialHavocbot()
-    startSpecialHavocbot2()
+    //startSpecialHavocbot2()
 
     //startSpecialForwMines()
     //startSpecialBackwmines()
-    //startSpecialAttackForwardEvenIfNoVisibility(1, false, false)
+    //startSpecialBackwminesZaharidSpecial()
+    startSpecialZaharidRound2()
+    //startSpecialAttackForwardEvenIfNoVisibility(0, false, false)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
     //startSpecialWalkForward()
 
 
+
+
     normalActions()
+}
+
+startSpecialDarkLingArcher7 = function() {
+    if (turn == 1) {
+        if (canCloak()) cloak()
+        w()
+    }
+    if (turn == 2) {
+        if (canReflect()) reflect()
+        w()
+    }
+    if (turn <= 3) zap()
+    if (turn <= 4) {
+        t(x+5, y)
+        t(x+4, y)
+        t(x+4, y-1)
+        t(x+4, y+1)
+        probablyTeleportToBestOffensiveTeleportLocation()
+    }
 }
 
 normalActions = function() {
@@ -549,6 +575,19 @@ fightEnemyNearRepairStation = function() {
 
 /*************************************************** Various start specials **********************************************************/
 
+startSpecialDarklingArcher6 = function() {
+    if (turn == 1) cloak()
+    if (turn == 2) {
+        t(x+5, y)
+        t(x+4, y)
+        probablyTeleportToBestOffensiveTeleportLocation()
+    }
+    if (turn == 3) {
+        if (canReflect()) reflect()
+        if (canZap()) zap()
+    }
+}
+
 startSpecialWalkForward = function() {
     if (turn <= 6) {
         closestNmyBot = findClosestEnemyBot()
@@ -598,6 +637,13 @@ startSpecialCrayIton = function() {
 }
 
 startSpecialRon2 = function() {
+    if (turn <= 7 && life <= 400) {
+        mode = MODE_RETREAT_REPAIR
+        t(x-5, y)
+        t(x-4, y-1)
+        t(x-3, y-2)
+        t(x-4, y)
+    }
     if (mode) {
         wallFlowerRepair()
     }
@@ -640,16 +686,17 @@ startSpecialRon3 = function() {
     }
 }
 
-startSpecialRon4 = function() {
+// Emp special combo
+startSpecialEmpSpecial = function(movesToRight) {
     if (turn == 1) {
         if (canReflect()) reflect()
         w()
     }
-    if (turn == 2) {
+    if (turn <= 1+movesToRight) {
         m(x+1, y)
     }
-    if (turn == 3) zap()
-    if (turn == 4) {
+    if (turn <= 2+movesToRight) zap()
+    if (turn <= 3+movesToRight) {
         t(x+5, y)
         t(x+4, y)
         t(x+4, y-1)
@@ -657,7 +704,6 @@ startSpecialRon4 = function() {
         probablyTeleportToBestOffensiveTeleportLocation()
     }
 }
-
 
 startSpecialAttackForwardEvenIfNoVisibility = function(movesToRight, reflectImmediately, mixingReflectorsAndNonReflectors) {
     if (turn == 1 && reflectImmediately && canReflect()) reflect()
@@ -727,6 +773,52 @@ startSpecialBackwmines = function() {
     }
 }
 
+startSpecialBackwminesZaharidSpecial = function() {
+    if (mode == MODE_NORMAL) {
+        return
+    }
+    if (haveAlliesSignalledNormalMode()) {
+        mode = MODE_NORMAL
+        m(x-1, y)
+        return
+    }
+    if (canReflect() && turn >= 7 && currDistToClosestBot <= 5) reflect()
+    if (currDistToClosestBot <= 1 || x <= 1) {
+        signalAlliesNormalMode()
+        m(x-1, y)
+        mode = MODE_NORMAL
+        return
+    }
+    if (canLayMine() && currDistToClosestBot >= 3) layMine()
+    m(x-1, y)
+    w()
+}
+
+// 1 bot up, 1 bot down, some bots in the center.
+// The idea with the up/down bots is to induce enemy tanks to waste their teleport
+startSpecialZaharidRound2 = function() {
+    if (turn == 1) reflect()
+    if (turn == 2) {
+        if (y <= 1) {
+            t(x, y+5)
+            t(x, y+4)
+            t(x+1, y+4)
+            t(x-1, y+4)
+        }
+        if (y >= arenaHeight-2) {
+            t(x, y-5)
+            t(x, y-4)
+            t(x+1, y-4)
+            t(x-1, y-4)
+        }
+        t(x+5, y)
+        t(x+4, y)
+        t(x+4, y+1)
+        t(x+4, y-1)
+    }
+    if (turn == 3 && canZap()) zap()
+}
+
 hasWaitLureEnded = function() {
     if (haveAlliesSignalledNormalMode()) return true
     if (currDistToClosestBot <= 2 && canZap()) return true
@@ -762,6 +854,31 @@ startSpecialJuanjoBait = function() {
     if (turn <= 15) {
         m(x-1, y)
         w()
+    }
+}
+
+startSpecialJuanjo2 = function() {
+    if (turn == 1) {
+        if (canReflect()) reflect()
+        w()
+    }
+    if (turn <= 4) {
+        m(x+1, y)
+    }
+    if (turn == 5) {
+        zap()
+    }
+    if (turn == 6) {
+        if (canTeleport()) {
+            t(x+5, y)
+            t(x+4, y)
+            probablyTeleportToBestOffensiveTeleportLocation()
+        }
+    }
+    if (turn == 7) {
+        tryMelee(x+1, y)
+        tryMelee(x-1, y)
+        tryMelee(x+2, y)
     }
 }
 
