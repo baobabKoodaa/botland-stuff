@@ -76,7 +76,7 @@ maybeUpdateGoal = function() {
     if (turn == 1 || turn < ALLOW_MOVE_TURN) {
         setGoal(startX, startY)
     } else if (currDistToClosestBot <= 7) {
-        nmy = findClosestEnemyBot()
+        nmy = findLeftMostEnemyBot()
         // Prefer enemies within row's firing range rather than enemies which are closer but not on firing range.
         if (eat(x+1, y)) nmy = getEntityAt(x+1, y)
         if (eat(x+2, y)) nmy = getEntityAt(x+2, y)

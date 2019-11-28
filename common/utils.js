@@ -34,6 +34,17 @@ canActuallyTeleport = function(cx, cy) {
     return (!outOfBounds(cx, cy) && canTeleport(cx, cy) && !getEntityAt(cx, cy))
 }
 
+findLeftMostEnemyBot = function() {
+    leftMostNmyBot = null
+    array1 = findEntities(ENEMY, BOT, false)
+    for (i = 0; i < size(array1); i++) {
+        if (leftMostNmyBot == null || getX(array1[i]) < getX(leftMostNmyBot)) {
+            leftMostNmyBot = array1[i]
+        }
+    }
+    return leftMostNmyBot
+}
+
 t = function(cx, cy) {
     if (canActuallyTeleport(cx, cy)) {
         lastMoveTurn = turn
