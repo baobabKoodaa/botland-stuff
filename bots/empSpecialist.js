@@ -8,7 +8,7 @@ init = function() {
 update = function() {
     commonStateUpdates()
 
-    startSpecialCloakTeleEmp(1,'ZAPPER')
+    startSpecialCloakTeleEmp(0,'ZAPPER')
     //darklingSpecial()
     //baitSpecial()
 

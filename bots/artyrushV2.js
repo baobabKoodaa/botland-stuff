@@ -5,6 +5,7 @@ init = function() {
 
     KILL_REPAIRERS = 0
     ALTERNATE_REFLECT_CLOAK = 0
+    CLOAK_WHEN_ENEMY_NEAR = 1
     REFLECT_ON_DMG = 1
     DODGE_ARTILLERY = 0
 
@@ -24,9 +25,9 @@ update = function() {
     //startSpecialCloakMoveThreeTele()
     //startSpecialReflectTele()
     //startSpecialCloakTele()
-    //startSpecialCloakTeleReflect()
+    startSpecialCloakTeleReflect()
     //startSpecialTeleCloak()
-    startSpecialSlowRush(6)
+    //startSpecialSlowRush(6)
     //startSpecialCloakMoveToGoal()
     //startSpecialCraiton()
 
@@ -66,8 +67,11 @@ update = function() {
         if (canReflect() && !isReflecting() && !isCloaked()) reflect()
         if (canCloak() && !isReflecting() && !isCloaked()) cloak()
     }
-    if (REFLECT_ON_DMG && dmgTaken >= 100) {
+    if (REFLECT_ON_DMG && dmgTaken >= 100 && currDistToClosestBot > 1) {
         if (canReflect() && !isReflecting() && !isCloaked()) reflect()
+    }
+    if (CLOAK_WHEN_ENEMY_NEAR && currDistToClosestBot <= 5) {
+        if (canCloak() && !isReflecting() && !isCloaked()) cloak()
     }
 
     if (!exists(target) || !willArtilleryHit(target)) {
