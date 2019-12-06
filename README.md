@@ -1,5 +1,7 @@
 **Bot Land is a competition where you code AI for bots that fight other peoples' bots. I participated in this
  competition and this repository contains all my code.**
+ 
+ Here's a video showcasing gameplay with these bots: [https://youtu.be/M94WOJzoGR8](https://youtu.be/M94WOJzoGR8)
 
 The `bots` folder contains code for individual bots, and `common` contains code
  that is shared by
