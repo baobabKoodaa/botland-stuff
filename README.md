@@ -1,5 +1,15 @@
-Compiler will read all files in `bots` folder and compile corresponding files in `temp` folder. What we try to
- achieve with this setup:
- 1. Usability of commonly shared functions without copypasting (mainly to avoid accidental branching of copypasted
-  code). During compilation we automatically copypaste everything from `common` folder into output bot files.
-  2. Minification (for now, just strip comments out of everything). Output files have to stay below 16500 characters.
+**Bot Land is a competition where you code AI for bots that fight other peoples' bots. I participated in this
+ competition and this repository contains all my code.**
+
+The `bots` folder contains code for individual bots, and `common` contains code that is shared by multiple bots. The
+ most interesting stuff is `bots/tincan.js` (swarm unit), `bots/midrangerV2.js` (missile unit that does coordinated
+  hit-and-runs) and everything in `common` folder.
+  
+In order to use the bots you need to compile them. The compiler will read the designated
+  file from `bots` folder and any imports from `common` folder, and output minified code. Minification is necessary
+   because the game only accepts scripts below 16500 characters. Also, when you have many bots, you have a lot of
+    shared functionality, and this setup facilitates sharing functions without copypasting code (without a setup
+     like this you often end up with accidentally inconsistent branches of the same code running on different bots).
+
+**Disclaimer:** Not everything works. Some stuff is WIP. Some stuff is quickly hacked together (e.g. the compiler) and
+ will break for someone who uses slightly different syntax than me.
