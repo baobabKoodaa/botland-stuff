@@ -1,4 +1,5 @@
 /*
+ * NOTE: THIS FILE IS WIP AND PROBABLY DOES NOT WORK AS IS.
  * Using array2 to track multiple different things and share info between bots by using sharedB.
  */
 
