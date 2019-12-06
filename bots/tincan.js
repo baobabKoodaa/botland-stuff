@@ -1,6 +1,12 @@
 //!import state
 //!import utils
 
+// This is my main swarm unit.
+// Recommended loadout when enemy has strong missiles/lasers: zap1, melee2, tele2, reflect2
+// Recommended loadout without reflecting:                    zap2, melee3, tele2
+// Also: you don't need tele2 against some enemies!
+// Also: check out the various start specials that can be uncommented.
+
 init = function() {
 
     TELEPORT_ALLOWED_FROM_TURN = 1
@@ -63,7 +69,7 @@ update = function() {
     //startSpecialZaharid2()
     //startSpecialRon2()
     //startSpecialRon3() // old burn-zapper-cooldown-thingie
-    startSpecialEmpSpecial(0)
+    //startSpecialEmpSpecial(0)
     //startSpecialHavocbot()
     //startSpecialHavocbot2()
 

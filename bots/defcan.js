@@ -1,6 +1,8 @@
 //!import state
 //!import utils
 
+// Defensive. Recommended loadout: Melee2, Zap1, Tele2, Reflect2
+
 init = function() {
 
     SENSORS_ALLOWED_FROM_TURN = 1;

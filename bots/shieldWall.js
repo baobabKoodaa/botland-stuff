@@ -1,6 +1,8 @@
 //!import state
 //!import utils
 
+// Recommended loadout: reflect3, teleport2, landmine1, artillery1
+
 init = function() {
     commonInitProcedures()
 }

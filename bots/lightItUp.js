@@ -1,6 +1,8 @@
 //!import state
 //!import utils
 
+// This didn't work out too well.
+
 init = function() {
 
     commonInitProcedures()

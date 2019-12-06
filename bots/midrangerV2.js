@@ -5,7 +5,7 @@
 
 
 // Coordinated attack -> retreat waves with coordinated targeting.
-// Loadout: missile3, tele2, repair2/shield2
+// Recommended loadout: missile3, tele2, repair2/shield2
 
 init = function() {
 

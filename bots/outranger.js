@@ -3,6 +3,8 @@
 //!import state
 //!import utils
 
+// Recommended loadout: artillery3, missiles3, cloak1
+
 init = function() {
     DODGE_ARTILLERY = 1
     REFLECT_ALLOWED_FROM_TURN = 1

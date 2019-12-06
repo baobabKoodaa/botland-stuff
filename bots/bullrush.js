@@ -1,6 +1,8 @@
 //!import state
 //!import utils
 
+// Melee CPU rush
+
 init = function() {
     commonInitProcedures()
 }
@@ -10,7 +12,7 @@ update = function() {
     cpu = findEntity(ENEMY, CPU, SORT_BY_DISTANCE, SORT_ASCENDING);
     closestBot = findEntity(ENEMY, BOT, SORT_BY_DISTANCE, SORT_ASCENDING);
 
-    startSpecialDarkLingBullRush()
+    //startSpecialDarkLingBullRush()
 
     if (canReflect() && (cpu.life > 1100 || !willMeleeHit(cpu)) && distanceTo(closestBot) <= 4) {
         reflect();

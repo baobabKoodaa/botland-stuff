@@ -1,6 +1,8 @@
 //!import state
 //!import utils
 
+// Recommended loadout: reflect3, shield3, [empty / thrusters1 depending on desired speed]
+
 init = function() {
     commonInitProcedures()
 }

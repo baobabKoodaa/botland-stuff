@@ -1,6 +1,8 @@
 //!import state
 //!import utils
 
+// Recommended loadout: Artillery2/3, sometimes Teleport2, sometimes Cloak2, sometimes Reflect1/2
+
 init = function() {
 
     KILL_REPAIRERS = 0

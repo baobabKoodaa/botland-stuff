@@ -1,6 +1,15 @@
 //!import state
 //!import utils
 
+// This code is for a team of 4 laser-units which most of the time stand in a row, trying to insta-kill enemies.
+// Recommended loadouts, in order of first (right-most, closest-to-enemies unit):
+//      1. StunningLasers1, Reflect3, Shield3
+//      2. Lasers2, Reflect2, Shield1, Repair2
+//      3. Lasers3, Reflect1, Shield3
+//      4. Lasers3, Artillery1, Shield3
+// Note that these loadouts are not "alternative loadouts", this code is specifically for 4 units which are set up to
+// stand in a row with specificly the specified loadout for each unit!
+
 init = function() {
     commonInitProcedures()
 

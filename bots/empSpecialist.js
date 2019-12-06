@@ -1,6 +1,8 @@
 //!import state
 //!import utils
 
+// Recommended loadout: Cloak1, Tele2, Emp3, and use the 1 remaining slot for a weapon depending on use case.
+
 init = function() {
     commonInitProcedures()
 }

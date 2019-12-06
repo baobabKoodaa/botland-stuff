@@ -3,6 +3,9 @@
 //!import state
 //!import utils
 
+// Recommended loadout: Missiles3, Landmines1, Reflect3 / (Teleport2+Thrusters1)
+// DO NOT USE THRUSTERS WHEN YOU NEED TO DODGE ARTILLERY!
+
 init = function() {
 
     DODGE_ARTILLERY = 1
