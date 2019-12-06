@@ -63,14 +63,14 @@ update = function() {
     //startSpecialZaharid2()
     //startSpecialRon2()
     //startSpecialRon3() // old burn-zapper-cooldown-thingie
-    //startSpecialEmpSpecial(0)
+    startSpecialEmpSpecial(0)
     //startSpecialHavocbot()
     //startSpecialHavocbot2()
 
     //startSpecialForwMines()
     //startSpecialBackwmines()
     //startSpecialBackwminesZaharidSpecial()
-    startSpecialZaharidRound2()
+    //startSpecialZaharidRound2()
     //startSpecialAttackForwardEvenIfNoVisibility(0, false, false)
     //startSpecialAttackVerticallyCenterEvenIfNoVisibility()
     //startSpecialWalkForward()
@@ -833,25 +833,25 @@ signalAlliesNormalMode = function() {
 }
 
 startSpecialJuanjoBait = function() {
-    if (turn <= 2) {
+    if (turn <= 4) {
         if (canLayMine()) layMine()
+        if (y == 3) m(x, y+1)
+        if (y == 9) m(x, y-1)
         w()
     }
-    if (turn <= 4) m(x-1, y)
-    if (turn <= 10) {
+    if (turn <= 6) m(x-1, y)
+    if (turn <= 12) {
         if (canZap() && currDistToClosestBot <= 2) zap()
         meleeAnythingButDontCharge()
-    }
-    if (turn <= 10) {
         if (canLayMine()) layMine()
         w()
     }
-    if (turn <= 11) {
+    if (turn <= 13) {
         t(x-5, y)
         t(x-4, y-1)
         t(x-4, y+1)
     }
-    if (turn <= 15) {
+    if (turn <= 19) {
         m(x-1, y)
         w()
     }
