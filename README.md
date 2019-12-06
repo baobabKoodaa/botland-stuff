@@ -1,9 +1,11 @@
 **Bot Land is a competition where you code AI for bots that fight other peoples' bots. I participated in this
  competition and this repository contains all my code.**
 
-The `bots` folder contains code for individual bots, and `common` contains code that is shared by multiple bots. The
+The `bots` folder contains code for individual bots, and `common` contains code
+ that is shared by
+ multiple bots. The
  most interesting stuff is `bots/tincan.js` (swarm unit), `bots/midrangerV2.js` (missile unit that does coordinated
-  hit-and-runs) and everything in `common` folder.
+  hit-and-runs) and everything in `common` folder. I held the #1 position on the attack ladder with these bots.
   
 In order to use the bots you need to compile them. The compiler will read the designated
   file from `bots` folder and any imports from `common` folder, and output minified code. Minification is necessary
